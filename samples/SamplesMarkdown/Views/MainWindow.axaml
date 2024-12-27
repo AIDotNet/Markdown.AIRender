@@ -8,6 +8,9 @@
         x:Class="SamplesMarkdown.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         Icon="/Assets/avalonia-logo.ico"
+        Height="600" 
+        Width="800"
+        WindowStartupLocation="CenterScreen"
         Title="SamplesMarkdown">
 
     <Design.DataContext>
@@ -16,5 +19,7 @@
         <vm:MainWindowViewModel />
     </Design.DataContext>
 
-    <markdownRender:MarkdownRender Value="{Binding Markdown}" />
+    <ScrollViewer>
+        <markdownRender:MarkdownRender Value="{Binding Markdown}" />
+    </ScrollViewer>
 </Window>

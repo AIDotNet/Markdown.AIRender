@@ -285,11 +285,7 @@ public class MarkdownRender : ContentControl, INotifyPropertyChanged
                     ? $"{orderIndex++}." // 有序列表：1. 2. 3. ...
                     : "  • "; // 无序列表：• • • •
 
-                itemPanel.Children.Add(new TextBlock
-                {
-                    Text = prefix,
-                    FontWeight = FontWeight.Bold,
-                });
+                itemPanel.Children.Add(new TextBlock { Text = prefix, FontWeight = FontWeight.Bold, });
 
                 // 再渲染该 listItemBlock 中的所有子块
                 var subPanel = new StackPanel { Orientation = Orientation.Vertical };
@@ -349,8 +345,8 @@ public class MarkdownRender : ContentControl, INotifyPropertyChanged
                 return CreateCodeInline(codeInline);
             //
             // // 超链接
-            // case LinkInline linkInline:
-            //     return CreateHyperlinkInline(linkInline);
+            case LinkInline linkInline:
+                return CreateHyperlinkInline(linkInline);
 
             // 换行
             case LineBreakInline _:
@@ -365,6 +361,26 @@ public class MarkdownRender : ContentControl, INotifyPropertyChanged
                 // 直接转成字符串
                 return new Run(mdInline.ToString());
         }
+    }
+
+    private Inline CreateHyperlinkInline(LinkInline linkInline)
+    {
+        foreach (var inline in linkInline)
+        {
+            if(inline is LiteralInline literalInline)
+            {
+                var span = new Span();
+                span.Inlines.Add(new Run(literalInline.Content.ToString())
+                {
+                    Foreground = SolidColorBrush.Parse("#0078d4"),
+                    TextDecorations = TextDecorations.Underline
+                });
+                
+                return span;
+            }
+        }
+        
+        return new LineBreak();
     }
 
     /// <summary>
