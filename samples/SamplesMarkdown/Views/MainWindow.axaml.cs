@@ -22,6 +22,8 @@ public partial class MainWindow : Window
             vm.Markdown = @"
 >微信公众号排版工具。问题或建议，请公众号留言。**[程序员翻身](#jump_8)**
 
+![Markdown](https://i-blog.csdnimg.cn/img_convert/a22f3596997f92d972839215b03a4750.png)
+
 建议使用 **Chrome** 浏览器，体验最佳效果。
 
 使用微信公众号编辑器有一个十分头疼的问题：粘贴出来的代码，格式错乱，空间小还带行号，而且特别丑。Markdown.com.cn编辑器能够解决这个问题。

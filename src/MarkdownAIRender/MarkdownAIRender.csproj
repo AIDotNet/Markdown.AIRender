@@ -6,6 +6,20 @@
         <PackageId>MarkdownAIRender</PackageId>
         <IncludeSymbols>true</IncludeSymbols>
         <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+        <Version>0.1.0</Version>
+        <Title>Avalonia Markdown组件</Title>
+        <Description>Avalonia Markdown组件
+支持基础功能</Description>
+        <PackageProjectUrl>https://github.com/AIDotNet/Markdown.AIRender</PackageProjectUrl>
+        <PackageLicenseUrl>https://github.com/AIDotNet/Markdown.AIRender/blob/master/LICENSE</PackageLicenseUrl>
+        <PackageIcon>logo.ico</PackageIcon>
+        <RepositoryUrl>https://github.com/AIDotNet/Markdown.AIRender</RepositoryUrl>
+        <RepositoryType>git</RepositoryType>
+        <PackageTags>Avalonia</PackageTags>
+        <PackageReleaseNotes>实现基础功能</PackageReleaseNotes>
+        <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+        <Copyright>MIT</Copyright>
     </PropertyGroup>
 
     <ItemGroup>
