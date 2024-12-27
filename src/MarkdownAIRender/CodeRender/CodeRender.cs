@@ -36,11 +36,11 @@ namespace MarkdownAIRender.CodeRender
             if (grammar == null)
             {
                 // 如果没有对应的 grammar，就简单返回纯文本
-                return new SelectableTextBlock { Text = code };
+                return new SelectableTextBlock { Text = code,TextWrapping = TextWrapping.Wrap};
             }
 
             // 使用 SelectableTextBlock，使得代码可被复制
-            var textBlock = new SelectableTextBlock { TextWrapping = TextWrapping.NoWrap };
+            var textBlock = new SelectableTextBlock { TextWrapping = TextWrapping.Wrap };
 
             s_ruleStack = null;
             var lines = code.Split('\n');
@@ -146,7 +146,10 @@ namespace MarkdownAIRender.CodeRender
                 textBlock.Inlines.Add(new LineBreak());
             }
 
-            return textBlock;
+            return new ScrollViewer()
+            {
+                Content = textBlock
+            };
         }
 
         private static Color HexToColor(string hexString)

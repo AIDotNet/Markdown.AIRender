@@ -8,21 +8,20 @@
         x:Class="SamplesMarkdown.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         Icon="/Assets/avalonia-logo.ico"
-        Height="600" 
+        Height="600"
         Width="800"
         WindowStartupLocation="CenterScreen"
         Title="SamplesMarkdown">
 
     <Design.DataContext>
-        <!-- This only sets the DataContext for the previewer in an IDE,
-             to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
         <vm:MainWindowViewModel />
     </Design.DataContext>
 
-        <ScrollViewer>
-    <Grid RowDefinitions="Auto *">
-        <ToggleSwitch Content="Theme" OnContent="Dark" OffContent="Light" Command="{Binding RaiseChangeThemeHandler}" />
-        <markdownRender:MarkdownRender Grid.Row="1" Value="{Binding Markdown}" />
-    </Grid>
-        </ScrollViewer>
+    <ScrollViewer>
+        <Grid RowDefinitions="Auto *">
+            <ToggleSwitch Content="Theme" OnContent="Dark" OffContent="Light"
+                          Command="{Binding RaiseChangeThemeHandler}" />
+            <markdownRender:MarkdownRender Grid.Row="1" Value="{Binding Markdown}" />
+        </Grid>
+    </ScrollViewer>
 </Window>

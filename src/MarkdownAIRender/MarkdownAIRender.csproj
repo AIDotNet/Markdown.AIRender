@@ -7,7 +7,7 @@
         <IncludeSymbols>true</IncludeSymbols>
         <SymbolPackageFormat>snupkg</SymbolPackageFormat>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-        <Version>0.1.5</Version>
+        <Version>0.1.6</Version>
         <Title>Avalonia Markdown组件</Title>
         <Description>Avalonia Markdown组件
 支持基础功能</Description>

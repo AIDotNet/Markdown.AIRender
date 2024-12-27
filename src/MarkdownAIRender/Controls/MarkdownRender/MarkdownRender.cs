@@ -9,7 +9,6 @@ using Avalonia.Controls.Primitives;
 using Avalonia.Input;
 using Avalonia.Layout;
 using Avalonia.Media;
-using Avalonia.Media.Imaging;
 using Avalonia.Styling;
 
 using Markdig;
@@ -40,6 +39,8 @@ public class MarkdownRender : ContentControl, INotifyPropertyChanged
             Render(value);
         }
     }
+
+    public event CodeToolRenderEventHandler? CodeToolRenderEvent;
 
     private string _copyText = "Copy";
 
@@ -75,7 +76,9 @@ public class MarkdownRender : ContentControl, INotifyPropertyChanged
         Application.Current.ActualThemeVariantChanged += ThemeChanged;
         _notificationManager = new WindowNotificationManager(TopLevel.GetTopLevel(this))
         {
-            Position = NotificationPosition.TopRight, MaxItems = 3, Margin = new Thickness(0, 0, 15, 40)
+            Position = NotificationPosition.TopRight,
+            MaxItems = 3,
+            Margin = new Thickness(0, 0, 15, 40)
         };
     }
 
@@ -159,7 +162,7 @@ public class MarkdownRender : ContentControl, INotifyPropertyChanged
                     Margin = new Thickness(0),
                     Background = Brushes.Transparent,
                     BorderBrush = Brushes.Transparent,
-                    TextWrapping = TextWrapping.WrapWithOverflow,
+                    TextWrapping = TextWrapping.Wrap,
                     Text = block.ToString()
                 };
         }
@@ -220,7 +223,11 @@ public class MarkdownRender : ContentControl, INotifyPropertyChanged
                     }
                     else
                     {
-                        span = new SelectableTextBlock { Inlines = new InlineCollection() };
+                        span = new SelectableTextBlock
+                        {
+                            Inlines = new InlineCollection(),
+                            TextWrapping = TextWrapping.Wrap,
+                        };
                         span.Inlines?.Add(inline);
                         container.Children.Add(span);
                     }
@@ -278,7 +285,10 @@ public class MarkdownRender : ContentControl, INotifyPropertyChanged
                     {
                         span = new SelectableTextBlock
                         {
-                            FontSize = fontSize, FontWeight = FontWeight.Bold, Inlines = new InlineCollection()
+                            FontSize = fontSize,
+                            FontWeight = FontWeight.Bold,
+                            TextWrapping = TextWrapping.Wrap,
+                            Inlines = new InlineCollection()
                         };
                         span.Inlines?.Add(inline);
                         container.Add(span);
@@ -334,11 +344,13 @@ public class MarkdownRender : ContentControl, INotifyPropertyChanged
 
 
         // 如果第一个是代码块，第二行是文件路径则显示执行按钮
-        if (fencedCodeBlock.Lines.Count > 1)
+        if (fencedCodeBlock.Lines.Count > 1 && CodeToolRenderEvent == null)
         {
             // 语言标签，给个稍微暗点的前景色以区分
             var languageText =
-                new SelectableTextBlock { Text = fencedCodeBlock.Info, Margin = new Thickness(0, 2, 10, 0) };
+                new SelectableTextBlock { Text = fencedCodeBlock.Info,
+                    TextWrapping = TextWrapping.Wrap,
+                    Margin = new Thickness(0, 2, 10, 0) };
 
             // Copy 按钮，与代码区域色彩区分（示例：背景灰，前景白）
             var copyButton = new Button
@@ -377,38 +389,28 @@ public class MarkdownRender : ContentControl, INotifyPropertyChanged
 
             headerPanel.Children.Add(languageText);
             headerPanel.Children.Add(copyButton);
-        }
+            stackPanel.Children.Add(headerPanel);
 
-        var textBox = new TextBox
-        {
-            IsReadOnly = true,
-            IsEnabled = true,
-            Classes = { "markdown" },
-            AcceptsReturn = true,
-            Margin = new Thickness(5),
-            Background = Brushes.Transparent,
-            BorderBrush = Brushes.Transparent,
-            TextWrapping = TextWrapping.WrapWithOverflow,
-            Text = fencedCodeBlock.Lines.ToString()
-        };
+            if (Application.Current.RequestedThemeVariant == ThemeVariant.Light)
+            {
+                stackPanel.Children.Add(CodeRender.CodeRender.Render(fencedCodeBlock.Lines.ToString(), fencedCodeBlock.Info ?? "text",
+                    ThemeName.LightPlus));
+            }
+            else
+            {
+                stackPanel.Children.Add(CodeRender.CodeRender.Render(fencedCodeBlock.Lines.ToString(), fencedCodeBlock.Info ?? "text",
+                    ThemeName.DarkPlus));
+            }
 
-        stackPanel.Children.Add(headerPanel);
-
-        // 获取当前系统主题
-
-        if (Application.Current.RequestedThemeVariant == ThemeVariant.Light)
-        {
-            stackPanel.Children.Add(CodeRender.CodeRender.Render(textBox.Text, fencedCodeBlock.Info ?? "text",
-                ThemeName.LightPlus));
-            border.Child = stackPanel;
         }
         else
         {
-            stackPanel.Children.Add(CodeRender.CodeRender.Render(textBox.Text, fencedCodeBlock.Info ?? "text",
-                ThemeName.DarkPlus));
-            border.Child = stackPanel;
+
+            stackPanel.Children.Add(headerPanel);
+            CodeToolRenderEvent?.Invoke(headerPanel, stackPanel, fencedCodeBlock);
         }
 
+        border.Child = stackPanel;
 
         return border;
     }
@@ -438,7 +440,9 @@ public class MarkdownRender : ContentControl, INotifyPropertyChanged
                     ? $"{orderIndex++}." // 有序列表：1. 2. 3. ...
                     : "  • "; // 无序列表：• • • •
 
-                itemPanel.Children.Add(new SelectableTextBlock { Text = prefix, FontWeight = FontWeight.Bold, });
+                itemPanel.Children.Add(new SelectableTextBlock { Text = prefix,
+                    TextWrapping = TextWrapping.Wrap,
+                    FontWeight = FontWeight.Bold, });
 
                 // 再渲染该 listItemBlock 中的所有子块
                 var subPanel = new StackPanel { Orientation = Orientation.Vertical };
@@ -567,6 +571,7 @@ public class MarkdownRender : ContentControl, INotifyPropertyChanged
                 {
                     Foreground = SolidColorBrush.Parse("#0078d4"),
                     TextDecorations = TextDecorations.Underline,
+                    TextWrapping = TextWrapping.Wrap,
                     Text = literalInline.Content.ToString(),
                     // 为了让鼠标变成手型
                     Cursor = new Cursor(StandardCursorType.Hand),
