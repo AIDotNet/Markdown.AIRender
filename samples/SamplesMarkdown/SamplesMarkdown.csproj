@@ -26,4 +26,12 @@
     <ItemGroup>
       <ProjectReference Include="..\..\src\MarkdownAIRender\MarkdownAIRender.csproj" />
     </ItemGroup>
+
+    <ItemGroup>
+      <None Update="logo.png">
+        <Pack>true</Pack>
+        <PackagePath></PackagePath>
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
+    </ItemGroup>
 </Project>

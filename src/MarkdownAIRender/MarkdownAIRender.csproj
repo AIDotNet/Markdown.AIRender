@@ -13,7 +13,6 @@
 支持基础功能</Description>
         <PackageProjectUrl>https://github.com/AIDotNet/Markdown.AIRender</PackageProjectUrl>
         <PackageLicenseUrl>https://github.com/AIDotNet/Markdown.AIRender/blob/master/LICENSE</PackageLicenseUrl>
-        <PackageIcon>logo.png</PackageIcon>
         <RepositoryUrl>https://github.com/AIDotNet/Markdown.AIRender</RepositoryUrl>
         <RepositoryType>git</RepositoryType>
         <PackageTags>Avalonia</PackageTags>

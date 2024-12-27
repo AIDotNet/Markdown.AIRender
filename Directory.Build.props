@@ -3,6 +3,11 @@
         <TargetFrameworks>net6.0;net7.0;net8.0;net9.0</TargetFrameworks>
         <LangVersion>latest</LangVersion>
         <Nullable>enable</Nullable>
+        <PackageIcon>logo.png</PackageIcon>
         <AvaloniaVersion>11.2.3</AvaloniaVersion>
     </PropertyGroup>
+
+    <ItemGroup>
+        <None Include="logo.png" Pack="true" PackagePath=""/>
+    </ItemGroup>
 </Project>
