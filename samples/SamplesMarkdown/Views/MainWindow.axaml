@@ -19,7 +19,10 @@
         <vm:MainWindowViewModel />
     </Design.DataContext>
 
-    <ScrollViewer>
-        <markdownRender:MarkdownRender Value="{Binding Markdown}" />
-    </ScrollViewer>
+        <ScrollViewer>
+    <Grid RowDefinitions="Auto *">
+        <ToggleSwitch Content="Theme" OnContent="Dark" OffContent="Light" Command="{Binding RaiseChangeThemeHandler}" />
+        <markdownRender:MarkdownRender Grid.Row="1" Value="{Binding Markdown}" />
+    </Grid>
+        </ScrollViewer>
 </Window>

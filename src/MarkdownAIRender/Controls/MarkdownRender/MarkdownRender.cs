@@ -138,8 +138,8 @@ public class MarkdownRender : ContentControl, INotifyPropertyChanged
     /// </summary>
     private Control CreateParagraph(ParagraphBlock paragraph)
     {
-        // 用 TextBlock 来呈现段落中的文本/行内元素
-        var textBlock = new TextBlock { TextWrapping = TextWrapping.Wrap, };
+        // 用 SelectableTextBlock 来呈现段落中的文本/行内元素
+        var text = new SelectableTextBlock() { Classes = { "p" } };
 
         // 段落里包含一系列的 Inline (Markdig 类型)，需要转成 Avalonia 的 Inline
         if (paragraph.Inline != null)
@@ -147,11 +147,11 @@ public class MarkdownRender : ContentControl, INotifyPropertyChanged
             var inlines = ConvertInlineContainer(paragraph.Inline);
             foreach (var inl in inlines)
             {
-                textBlock.Inlines?.Add(inl);
+                text.Inlines?.Add(inl);
             }
         }
 
-        return textBlock;
+        return text;
     }
 
     /// <summary>
@@ -159,23 +159,15 @@ public class MarkdownRender : ContentControl, INotifyPropertyChanged
     /// </summary>
     private Control CreateHeading(HeadingBlock headingBlock)
     {
-        // 同样用 TextBlock 来显示标题，设置不同的字体大小/样式以示区别
-        var textBlock = new TextBlock { FontWeight = FontWeight.Bold, TextWrapping = TextWrapping.Wrap };
-
-        switch (headingBlock.Level)
+        // 同样用 SelectableTextBlock 来显示标题，设置不同的字体大小/样式以示区别
+        var text = new SelectableTextBlock();
+        if (headingBlock.Level < 4)
         {
-            case 1:
-                textBlock.FontSize = 24;
-                break;
-            case 2:
-                textBlock.FontSize = 20;
-                break;
-            case 3:
-                textBlock.FontSize = 18;
-                break;
-            default:
-                textBlock.FontSize = 16;
-                break;
+            text.Classes.Add($"h{headingBlock.Level}");
+        }
+        else
+        {
+            text.Classes.Add($"h4");
         }
 
         if (headingBlock.Inline != null)
@@ -183,11 +175,11 @@ public class MarkdownRender : ContentControl, INotifyPropertyChanged
             var inlines = ConvertInlineContainer(headingBlock.Inline);
             foreach (var inl in inlines)
             {
-                textBlock.Inlines.Add(inl);
+                text.Inlines.Add(inl);
             }
         }
 
-        return textBlock;
+        return text;
     }
 
     /// <summary>
@@ -219,7 +211,8 @@ public class MarkdownRender : ContentControl, INotifyPropertyChanged
         if (fencedCodeBlock.Lines.Count > 1)
         {
             // 语言标签，给个稍微暗点的前景色以区分
-            var languageText = new TextBlock { Text = fencedCodeBlock.Info, Margin = new Thickness(0, 2, 10, 0) };
+            var languageText =
+                new SelectableTextBlock { Text = fencedCodeBlock.Info, Margin = new Thickness(0, 2, 10, 0) };
 
             // Copy 按钮，与代码区域色彩区分（示例：背景灰，前景白）
             var copyButton = new Button
@@ -277,7 +270,7 @@ public class MarkdownRender : ContentControl, INotifyPropertyChanged
             {
                 // 每个条目也可能包含段落、子列表等
                 // 这里再递归调用 ConvertBlock
-                // 为简化演示，每个 ListItem 先加一个“前缀 TextBlock”
+                // 为简化演示，每个 ListItem 先加一个“前缀 SelectableTextBlock”
                 var itemPanel = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 6 };
 
                 // 显示前缀
@@ -285,7 +278,7 @@ public class MarkdownRender : ContentControl, INotifyPropertyChanged
                     ? $"{orderIndex++}." // 有序列表：1. 2. 3. ...
                     : "  • "; // 无序列表：• • • •
 
-                itemPanel.Children.Add(new TextBlock { Text = prefix, FontWeight = FontWeight.Bold, });
+                itemPanel.Children.Add(new SelectableTextBlock { Text = prefix, FontWeight = FontWeight.Bold, });
 
                 // 再渲染该 listItemBlock 中的所有子块
                 var subPanel = new StackPanel { Orientation = Orientation.Vertical };
