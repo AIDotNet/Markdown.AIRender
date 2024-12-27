@@ -7,7 +7,7 @@
         <IncludeSymbols>true</IncludeSymbols>
         <SymbolPackageFormat>snupkg</SymbolPackageFormat>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-        <Version>0.1.0</Version>
+        <Version>0.1.5</Version>
         <Title>Avalonia Markdown组件</Title>
         <Description>Avalonia Markdown组件
 支持基础功能</Description>
@@ -27,6 +27,8 @@
         <PackageReference Include="Markdig.SyntaxHighlighting" Version="1.1.7" />
         <PackageReference Include="MarkdigExtensions.SyntaxHighlighting" Version="1.0.3" />
         <PackageReference Include="MarkdigExtensions.UrlRewriter" Version="1.0.0" />
+        <PackageReference Include="TextMateSharp" Version="1.0.65" />
+        <PackageReference Include="TextMateSharp.Grammars" Version="1.0.65" />
         <PackageReference Include="Whyse.Markdig.Slack" Version="1.0.978" />
     </ItemGroup>
     

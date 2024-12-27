@@ -4,11 +4,13 @@ using System.Runtime.CompilerServices;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Documents;
+using Avalonia.Controls.Notifications;
 using Avalonia.Controls.Primitives;
 using Avalonia.Input;
 using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
+using Avalonia.Styling;
 
 using Markdig;
 using Markdig.Syntax;
@@ -16,6 +18,8 @@ using Markdig.Syntax.Inlines;
 
 using MarkdownAIRender.Controls.Images;
 using MarkdownAIRender.Helper;
+
+using TextMateSharp.Grammars;
 
 using Inline = Avalonia.Controls.Documents.Inline;
 
@@ -55,6 +59,7 @@ public class MarkdownRender : ContentControl, INotifyPropertyChanged
     public event EventHandler CopyClick;
 
     public new event PropertyChangedEventHandler? PropertyChanged;
+    private WindowNotificationManager _notificationManager;
 
     protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
     {
@@ -65,6 +70,17 @@ public class MarkdownRender : ContentControl, INotifyPropertyChanged
     protected override void OnApplyTemplate(TemplateAppliedEventArgs e)
     {
         base.OnApplyTemplate(e);
+        Render(Value);
+
+        Application.Current.ActualThemeVariantChanged += ThemeChanged;
+        _notificationManager = new WindowNotificationManager(TopLevel.GetTopLevel(this))
+        {
+            Position = NotificationPosition.TopRight, MaxItems = 3, Margin = new Thickness(0, 0, 15, 40)
+        };
+    }
+
+    private void ThemeChanged(object? sender, EventArgs e)
+    {
         Render(Value);
     }
 
@@ -123,7 +139,7 @@ public class MarkdownRender : ContentControl, INotifyPropertyChanged
 
             case QuoteBlock quoteBlock:
                 return CreateQuote(quoteBlock);
-    
+
             case ThematicBreakBlock _:
                 return new Border
                 {
@@ -334,9 +350,29 @@ public class MarkdownRender : ContentControl, INotifyPropertyChanged
                 Margin = new Thickness(0, 0, 0, 0)
             };
 
+            // 根据当前系统主题设置按钮颜色
+            if (Application.Current.RequestedThemeVariant == ThemeVariant.Light)
+            {
+                copyButton.Background = SolidColorBrush.Parse("#0078d4");
+                copyButton.Foreground = SolidColorBrush.Parse("#ffffff");
+            }
+            else if (Application.Current.RequestedThemeVariant == ThemeVariant.Dark)
+            {
+                copyButton.Background = SolidColorBrush.Parse("#313131");
+                copyButton.Foreground = SolidColorBrush.Parse("#ffffff");
+            }
+            else
+            {
+                copyButton.Background = SolidColorBrush.Parse("#313131");
+                copyButton.Foreground = SolidColorBrush.Parse("#ffffff");
+            }
+
             copyButton.Click += (sender, e) =>
             {
                 CopyClick?.Invoke(this, e);
+                var clipboard = TopLevel.GetTopLevel(this).Clipboard;
+                clipboard.SetTextAsync(fencedCodeBlock.Lines.ToString());
+                _notificationManager.Show(new Notification("复制成功", "代码已复制到剪贴板", NotificationType.Success));
             };
 
             headerPanel.Children.Add(languageText);
@@ -357,8 +393,22 @@ public class MarkdownRender : ContentControl, INotifyPropertyChanged
         };
 
         stackPanel.Children.Add(headerPanel);
-        stackPanel.Children.Add(textBox);
-        border.Child = stackPanel;
+
+        // 获取当前系统主题
+
+        if (Application.Current.RequestedThemeVariant == ThemeVariant.Light)
+        {
+            stackPanel.Children.Add(CodeRender.CodeRender.Render(textBox.Text, fencedCodeBlock.Info ?? "text",
+                ThemeName.LightPlus));
+            border.Child = stackPanel;
+        }
+        else
+        {
+            stackPanel.Children.Add(CodeRender.CodeRender.Render(textBox.Text, fencedCodeBlock.Info ?? "text",
+                ThemeName.DarkPlus));
+            border.Child = stackPanel;
+        }
+
 
         return border;
     }
@@ -587,11 +637,32 @@ public class MarkdownRender : ContentControl, INotifyPropertyChanged
     /// </summary>
     private Inline CreateCodeInline(CodeInline codeInline)
     {
-        return new Run(codeInline.Content)
+        if (Application.Current.RequestedThemeVariant == ThemeVariant.Light)
         {
-            FontFamily = new FontFamily("Consolas"),
-            Foreground = SolidColorBrush.Parse("#f0f0f0"),
-            Background = SolidColorBrush.Parse("#313131"),
-        };
+            return new Run(codeInline.Content)
+            {
+                FontFamily = new FontFamily("Consolas"),
+                Foreground = SolidColorBrush.Parse("#000000"),
+                Background = SolidColorBrush.Parse("#f0f0f0"),
+            };
+        }
+        else if (Application.Current.RequestedThemeVariant == ThemeVariant.Dark)
+        {
+            return new Run(codeInline.Content)
+            {
+                FontFamily = new FontFamily("Consolas"),
+                Foreground = SolidColorBrush.Parse("#f0f0f0"),
+                Background = SolidColorBrush.Parse("#313131"),
+            };
+        }
+        else
+        {
+            return new Run(codeInline.Content)
+            {
+                FontFamily = new FontFamily("Consolas"),
+                Foreground = SolidColorBrush.Parse("#f0f0f0"),
+                Background = SolidColorBrush.Parse("#313131"),
+            };
+        }
     }
 }
