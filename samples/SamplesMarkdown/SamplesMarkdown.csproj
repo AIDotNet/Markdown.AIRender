@@ -1,15 +1,23 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
         <OutputType>WinExe</OutputType>
-        <TargetFrameworks>net8.0;</TargetFrameworks>
+        <TargetFrameworks>net8.0;net9.0;</TargetFrameworks>
         <Nullable>enable</Nullable>
         <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
         <ApplicationManifest>app.manifest</ApplicationManifest>
         <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+        <PublishAot>true</PublishAot>
+    </PropertyGroup>
+    <PropertyGroup Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))">
+        <IsTrimmable>true</IsTrimmable>
+        <PublishTrimmed>true</PublishTrimmed>
+    </PropertyGroup>
+    <PropertyGroup Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net9.0'))">
+        <IsTrimmable>true</IsTrimmable>
+        <PublishTrimmed>true</PublishTrimmed>
     </PropertyGroup>
 
     <ItemGroup>
-        <Folder Include="Models\" />
         <AvaloniaResource Include="Assets\**" />
     </ItemGroup>
 
