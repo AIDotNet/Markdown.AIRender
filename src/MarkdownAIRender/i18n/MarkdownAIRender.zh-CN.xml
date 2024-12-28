@@ -1,0 +1,9 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+
+<Localization language="Chinese (Simplified)" description="中文简体" cultureName="zh-CN">
+  <MarkdownRender>
+    <CopyButtonContent>复制</CopyButtonContent>
+    <CopyNotificationTitle>复制成功</CopyNotificationTitle>
+    <CopyNotificationMessage>复制成功</CopyNotificationMessage>
+  </MarkdownRender>
+</Localization>

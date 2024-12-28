@@ -18,8 +18,17 @@
     </Design.DataContext>
 
     <Grid RowDefinitions="Auto *">
-        <ToggleSwitch Content="Theme" OnContent="Dark" OffContent="Light"
-                      Command="{Binding RaiseChangeThemeHandler}" Margin="0 0 0 10" />
+        <StackPanel Orientation="Horizontal" Margin="0 10" VerticalAlignment="Center">
+            <TextBlock Text="Theme: " VerticalAlignment="Center" />
+            <ToggleSwitch OnContent="Dark" OffContent="Light" VerticalAlignment="Center"
+                          Command="{Binding RaiseChangeThemeHandler}" Margin="10 0" />
+            <TextBlock Text="Language: " VerticalAlignment="Center" />
+            <ComboBox
+                PlaceholderText="Select a language" VerticalAlignment="Center"
+                DisplayMemberBinding="{Binding Description}"
+                ItemsSource="{Binding Languages}"
+                SelectedItem="{Binding SelectedLanguage}" />
+        </StackPanel>
         <ScrollViewer Grid.Row="1">
             <markdownRender:MarkdownRender Value="{Binding Markdown}" />
         </ScrollViewer>

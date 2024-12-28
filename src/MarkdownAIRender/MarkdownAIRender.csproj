@@ -21,10 +21,50 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <None Include="i18n\Language.cs">
+        <DesignTime>True</DesignTime>
+        <AutoGen>True</AutoGen>
+        <DependentUpon>Language.tt</DependentUpon>
+      </None>
+    </ItemGroup>
+
+    <ItemGroup>
       <PackageReference Include="Avalonia" Version="$(AvaloniaVersion)" />
+      <PackageReference Include="AvaloniaXmlTranslator" Version="1.0.2" />
         <PackageReference Include="Markdig" Version="0.39.1" />
         <PackageReference Include="TextMateSharp" Version="1.0.65" />
         <PackageReference Include="TextMateSharp.Grammars" Version="1.0.65" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Update="i18n\Language.tt">
+        <Generator>TextTemplatingFileGenerator</Generator>
+        <LastGenOutput>Language.cs</LastGenOutput>
+      </None>
+      <None Update="i18n\MarkdownAIRender.ja-JP.xml">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
+      <None Update="i18n\MarkdownAIRender.en-US.xml">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
+      <None Update="i18n\MarkdownAIRender.zh-Hant.xml">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
+      <None Update="i18n\MarkdownAIRender.zh-CN.xml">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
+    </ItemGroup>
+
+    <ItemGroup>
+      <Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Compile Update="i18n\Language.cs">
+        <DesignTime>True</DesignTime>
+        <AutoGen>True</AutoGen>
+        <DependentUpon>Language.tt</DependentUpon>
+      </Compile>
     </ItemGroup>
     
 </Project>
