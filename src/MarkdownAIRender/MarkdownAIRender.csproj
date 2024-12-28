@@ -24,12 +24,8 @@
     <ItemGroup>
       <PackageReference Include="Avalonia" Version="$(AvaloniaVersion)" />
         <PackageReference Include="Markdig" Version="0.39.1" />
-        <PackageReference Include="Markdig.SyntaxHighlighting" Version="1.1.7" />
-        <PackageReference Include="MarkdigExtensions.SyntaxHighlighting" Version="1.0.3" />
-        <PackageReference Include="MarkdigExtensions.UrlRewriter" Version="1.0.0" />
         <PackageReference Include="TextMateSharp" Version="1.0.65" />
         <PackageReference Include="TextMateSharp.Grammars" Version="1.0.65" />
-        <PackageReference Include="Whyse.Markdig.Slack" Version="1.0.978" />
     </ItemGroup>
     
 </Project>
