@@ -7,7 +7,7 @@
         <IncludeSymbols>true</IncludeSymbols>
         <SymbolPackageFormat>snupkg</SymbolPackageFormat>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-        <Version>0.1.6</Version>
+        <Version>0.1.8</Version>
         <Title>Avalonia Markdown组件</Title>
         <Description>Avalonia Markdown组件支持基础功能</Description>
         <PackageProjectUrl>https://github.com/AIDotNet/Markdown.AIRender</PackageProjectUrl>
