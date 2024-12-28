@@ -1,4 +1,7 @@
+using System;
+using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
 using System.Runtime.CompilerServices;
 
 using Avalonia;
@@ -9,7 +12,9 @@ using Avalonia.Controls.Primitives;
 using Avalonia.Input;
 using Avalonia.Layout;
 using Avalonia.Media;
+using Avalonia.Reactive;
 using Avalonia.Styling;
+using Avalonia.VisualTree;
 
 using Markdig;
 using Markdig.Syntax;
@@ -22,652 +27,893 @@ using TextMateSharp.Grammars;
 
 using Inline = Avalonia.Controls.Documents.Inline;
 
-namespace MarkdownAIRender.Controls.MarkdownRender;
-
-public class MarkdownRender : ContentControl, INotifyPropertyChanged
+namespace MarkdownAIRender.Controls.MarkdownRender
 {
-    public static readonly StyledProperty<string?> ValueProperty = AvaloniaProperty.Register<MarkdownRender, string?>(
-        nameof(Value));
-
-
-    public string? Value
+    public class MarkdownRender : ContentControl, INotifyPropertyChanged
     {
-        get => GetValue(ValueProperty);
-        set
+        #region Dependency Property
+
+        public static readonly StyledProperty<string?> ValueProperty =
+            AvaloniaProperty.Register<MarkdownRender, string?>(nameof(Value));
+
+        #endregion
+
+        #region Fields
+
+        // 旧的文档结构（用于对比增量渲染）
+        private MarkdownDocument? _oldDocument;
+
+        // 用于存储 Block -> Control 的映射
+        private readonly Dictionary<Block, Control> _oldBlockControlMap = new();
+
+        private MarkdownDocument? _parsedDocument;
+        private WindowNotificationManager? _notificationManager;
+        private string _copyText = "Copy";
+
+        #endregion
+
+        #region Events
+
+        /// <summary>
+        /// 用于处理代码块中可能的额外工具渲染，外部可以订阅并自定义渲染逻辑。
+        /// </summary>
+        public event CodeToolRenderEventHandler? CodeToolRenderEvent;
+
+        /// <summary>
+        /// 复制按钮触发事件
+        /// </summary>
+        public event EventHandler? CopyClick;
+
+        /// <summary>
+        /// 标准的 PropertyChanged 事件
+        /// </summary>
+        public new event PropertyChangedEventHandler? PropertyChanged;
+
+        #endregion
+
+        #region Properties
+
+        public string? Value
         {
-            SetValue(ValueProperty, value);
-            Render(value);
-        }
-    }
-
-    public event CodeToolRenderEventHandler? CodeToolRenderEvent;
-
-    private string _copyText = "Copy";
-
-    public string CopyText
-    {
-        get => _copyText;
-        set
-        {
-            _copyText = value;
-            OnPropertyChanged(nameof(CopyText));
-        }
-    }
-
-    /// <summary>
-    /// 复制按钮触发事件
-    /// </summary>
-    public event EventHandler CopyClick;
-
-    public new event PropertyChangedEventHandler? PropertyChanged;
-    private WindowNotificationManager _notificationManager;
-
-    protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
-    {
-        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-        Render(Value);
-    }
-
-    protected override void OnApplyTemplate(TemplateAppliedEventArgs e)
-    {
-        base.OnApplyTemplate(e);
-        Render(Value);
-
-        Application.Current.ActualThemeVariantChanged += ThemeChanged;
-        _notificationManager = new WindowNotificationManager(TopLevel.GetTopLevel(this))
-        {
-            Position = NotificationPosition.TopRight,
-            MaxItems = 3,
-            Margin = new Thickness(0, 0, 15, 40)
-        };
-    }
-
-    private void ThemeChanged(object? sender, EventArgs e)
-    {
-        Render(Value);
-    }
-
-    /// <summary>
-    /// 将 Markdown 文本解析并渲染为 Avalonia 控件，最终设置到本 UserControl 的 Content 中。
-    /// </summary>
-    /// <param name="markdown">要渲染的 Markdown 内容</param>
-    public void Render(string? markdown)
-    {
-        if (string.IsNullOrEmpty(markdown))
-        {
-            return;
-        }
-
-        // 1. 使用 Markdig 解析 Markdown 文本
-        var document = Markdown.Parse(markdown ?? "");
-
-        // 2. 准备一个根容器，用于放置渲染结果
-        var container = new StackPanel { Orientation = Orientation.Vertical, Spacing = 6 };
-
-        // 3. 遍历文档中的所有 Block，分别转成 Avalonia 的控件
-        foreach (var block in document)
-        {
-            var control = ConvertBlock(block);
-            if (control != null)
+            get => GetValue(ValueProperty);
+            set
             {
-                container.Children.Add(control);
+                SetValue(ValueProperty, value);
+                OnPropertyChanged();
+
+                // 每次 Value 改变时，重新解析+渲染
+                ParseMarkdown(GetValue(ValueProperty));
+
+                // 使用增量方式渲染
+                RenderParsedDocumentIncremental();
             }
         }
 
-        Content = container;
-    }
-
-    /// <summary>
-    /// 将 Markdig 的 Block 对象转换为对应的 Avalonia 控件
-    /// </summary>
-    private Control? ConvertBlock(Block block)
-    {
-        switch (block)
+        public string CopyText
         {
-            // ---- 段落 ----
-            case ParagraphBlock paragraph:
-                return CreateParagraph(paragraph);
-
-            // ---- 标题 ----
-            case HeadingBlock heading:
-                return CreateHeading(heading);
-
-            // ---- 代码块 ----
-            case FencedCodeBlock codeBlock:
-                return CreateCodeBlock(codeBlock);
-
-            // ---- 列表 ----
-            case ListBlock listBlock:
-                return CreateList(listBlock);
-
-            case QuoteBlock quoteBlock:
-                return CreateQuote(quoteBlock);
-
-            case ThematicBreakBlock _:
-                return new Border
-                {
-                    BorderBrush = Brushes.Gray,
-                    BorderThickness = new Thickness(0, 0, 0, 1),
-                    Margin = new Thickness(0, 5, 0, 5)
-                };
-
-            // 其它类型暂不处理，简单输出其文本
-            default:
-                return new TextBox
-                {
-                    IsReadOnly = true,
-                    IsEnabled = true,
-                    AcceptsReturn = true,
-                    Classes = { "markdown" },
-                    Margin = new Thickness(0),
-                    Background = Brushes.Transparent,
-                    BorderBrush = Brushes.Transparent,
-                    TextWrapping = TextWrapping.Wrap,
-                    Text = block.ToString()
-                };
-        }
-    }
-
-    private Control CreateQuote(QuoteBlock quoteBlock)
-    {
-        var border = new Border
-        {
-            BorderBrush = Brushes.Gray,
-            BorderThickness = new Thickness(3, 0, 0, 0),
-            Padding = new Thickness(8, 5, 5, 5),
-            Margin = new Thickness(8, 5, 0, 5)
-        };
-
-        var stackPanel = new StackPanel { Orientation = Orientation.Vertical };
-
-        var headerPanel = new StackPanel
-        {
-            Orientation = Orientation.Horizontal,
-            HorizontalAlignment = HorizontalAlignment.Right,
-            Margin = new Thickness(0, 0, 0, 5),
-        };
-
-        stackPanel.Children.Add(headerPanel);
-        border.Child = stackPanel;
-
-        foreach (Block block in quoteBlock)
-        {
-            var control = ConvertBlock(block);
-            if (control != null)
+            get => _copyText;
+            set
             {
-                stackPanel.Children.Add(control);
+                if (_copyText == value) return;
+                _copyText = value;
+                OnPropertyChanged();
             }
         }
 
-        return border;
-    }
+        #endregion
 
-    /// <summary>
-    /// 创建段落控件
-    /// </summary>
-    private Control CreateParagraph(ParagraphBlock paragraph)
-    {
-        var container = new WrapPanel { Orientation = Orientation.Horizontal };
-        // 段落里包含一系列的 Inline (Markdig 类型)，需要转成 Avalonia 的 Inline
-        int index = 0;
-        if (paragraph.Inline != null)
+        #region Constructor
+
+        public MarkdownRender()
         {
-            var controls = ConvertInlineContainer(paragraph.Inline);
-            foreach (var control in controls)
+            // 构造函数里如果有初始Value, 可以主动解析
+            if (!string.IsNullOrEmpty(GetValue(ValueProperty)))
             {
-                if (control is Inline inline)
+                ParseMarkdown(GetValue(ValueProperty));
+            }
+
+            // 监测 ValueProperty 的变化
+            ValueProperty.Changed.AddClassHandler<MarkdownRender>((sender, e) =>
+            {
+                if (e.NewValue is string newValue)
                 {
-                    if (container.Children.Count > 0 && container.Children.LastOrDefault() is SelectableTextBlock span)
+                    sender.Value = newValue;
+                }
+            });
+        }
+
+        #endregion
+
+        #region Overrides
+
+        protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e)
+        {
+            base.OnAttachedToVisualTree(e);
+
+            if (_parsedDocument == null && !string.IsNullOrEmpty(GetValue(ValueProperty)))
+            {
+                ParseMarkdown(GetValue(ValueProperty));
+            }
+
+            // 初始渲染（增量）
+            RenderParsedDocumentIncremental();
+
+            // 初始化通知管理器
+            _notificationManager = new WindowNotificationManager(TopLevel.GetTopLevel(this))
+            {
+                Position = NotificationPosition.TopRight,
+                MaxItems = 3,
+                Margin = new Thickness(0, 0, 15, 40)
+            };
+
+            // 订阅主题变化事件
+            Application.Current.ActualThemeVariantChanged += ThemeChanged;
+        }
+
+        protected override void OnApplyTemplate(TemplateAppliedEventArgs e)
+        {
+            base.OnApplyTemplate(e);
+            // 模板相关操作
+        }
+
+        #endregion
+
+        #region Theme Handling
+
+        private void ThemeChanged(object? sender, EventArgs e)
+        {
+            // 主题改变时也做一次增量渲染（或全量渲染）
+            if (_parsedDocument != null)
+            {
+                RenderParsedDocumentIncremental();
+            }
+        }
+
+        #endregion
+
+        #region Parsing & Incremental Rendering
+
+        private void ParseMarkdown(string? markdown)
+        {
+            if (string.IsNullOrEmpty(markdown))
+            {
+                _parsedDocument = null;
+                return;
+            }
+
+            _parsedDocument = Markdown.Parse(markdown);
+        }
+
+        /// <summary>
+        /// 增量渲染：对比新旧文档，只在需要时新建或删除控件
+        /// </summary>
+        private void RenderParsedDocumentIncremental()
+        {
+            if (_parsedDocument == null)
+            {
+                Content = null;
+                _oldDocument = null;
+                _oldBlockControlMap.Clear();
+                return;
+            }
+
+            // 若当前 Content 不是StackPanel，就换成一个新的
+            if (Content is not StackPanel container)
+            {
+                container = new StackPanel { Orientation = Orientation.Vertical, Spacing = 6 };
+                Content = container;
+                _oldDocument = null;
+                _oldBlockControlMap.Clear();
+            }
+
+            // 对比新旧 Document
+            DiffAndUpdateBlocks(container, _oldDocument, _parsedDocument);
+
+            // 更新旧文档引用
+            _oldDocument = _parsedDocument;
+        }
+
+        /// <summary>
+        /// 对比新旧文档的 Blocks，并对 UI 做增量修改
+        /// </summary>
+        private void DiffAndUpdateBlocks(StackPanel container, MarkdownDocument? oldDoc, MarkdownDocument newDoc)
+        {
+            // 如果旧文档为空 => 全量添加
+            if (oldDoc == null || oldDoc.Count == 0)
+            {
+                container.Children.Clear();
+                _oldBlockControlMap.Clear();
+
+                foreach (var newBlock in newDoc)
+                {
+                    var newControl = ConvertBlock(newBlock);
+                    if (newControl != null)
                     {
-                        span.Inlines?.Add(inline);
+                        container.Children.Add(newControl);
+                        _oldBlockControlMap[newBlock] = newControl;
+                    }
+                }
+                return;
+            }
+
+            var oldBlocks = oldDoc.ToList();
+            var newBlocks = newDoc.ToList();
+
+            var oldMapBackup = new Dictionary<Block, Control>(_oldBlockControlMap);
+
+            var finalChildren = new List<Control>();
+            var newBlockControlMap = new Dictionary<Block, Control>();
+
+            int maxCount = Math.Max(oldBlocks.Count, newBlocks.Count);
+
+            for (int i = 0; i < maxCount; i++)
+            {
+                var oldBlock = i < oldBlocks.Count ? oldBlocks[i] : null;
+                var newBlock = i < newBlocks.Count ? newBlocks[i] : null;
+
+                // 如果旧Block不存在 => 新增
+                if (oldBlock == null && newBlock != null)
+                {
+                    var newCtrl = ConvertBlock(newBlock);
+                    if (newCtrl != null)
+                    {
+                        finalChildren.Add(newCtrl);
+                        newBlockControlMap[newBlock] = newCtrl;
+                    }
+                    continue;
+                }
+
+                // 如果新Block不存在 => 删除
+                if (newBlock == null && oldBlock != null)
+                {
+                    if (oldMapBackup.TryGetValue(oldBlock, out var oldCtrl))
+                    {
+                        // 可以在这里做 oldCtrl 的清理，Dispose等
+                    }
+                    continue;
+                }
+
+                // 两边都存在 => 判断是否可复用
+                if (oldBlock != null && newBlock != null)
+                {
+                    bool canReuse =
+                        oldBlock.GetType() == newBlock.GetType()
+                        && GetBlockContent(oldBlock) == GetBlockContent(newBlock);
+
+                    if (canReuse && oldMapBackup.TryGetValue(oldBlock, out var oldCtrl))
+                    {
+                        // 可以复用
+                        finalChildren.Add(oldCtrl);
+                        newBlockControlMap[newBlock] = oldCtrl;
                     }
                     else
                     {
-                        span = new SelectableTextBlock
+                        // 无法复用 => 移除旧控件，新建新控件
+                        if (oldMapBackup.TryGetValue(oldBlock, out var oldCtrlToRemove))
                         {
-                            Inlines = new InlineCollection(),
-                            TextWrapping = TextWrapping.Wrap,
-                        };
-                        span.Inlines?.Add(inline);
-                        container.Children.Add(span);
+                            // 做一些清理
+                        }
+                        var newCtrl = ConvertBlock(newBlock);
+                        if (newCtrl != null)
+                        {
+                            finalChildren.Add(newCtrl);
+                            newBlockControlMap[newBlock] = newCtrl;
+                        }
                     }
                 }
-                else if (control is Control item)
-                {
-                    container.Children.Add(item);
-                }
+            }
+
+            container.Children.Clear();
+            foreach (var c in finalChildren)
+            {
+                container.Children.Add(c);
+            }
+
+            // 替换旧的映射表
+            _oldBlockControlMap.Clear();
+            foreach (var kv in newBlockControlMap)
+            {
+                _oldBlockControlMap[kv.Key] = kv.Value;
             }
         }
 
-        return container;
-    }
+        #endregion
 
-    /// <summary>
-    /// 创建标题控件
-    /// </summary>
-    private Control CreateHeading(HeadingBlock headingBlock)
-    {
-        // 同样用 SelectableTextBlock 来显示标题，设置不同的字体大小/样式以示区别
-        var container = new List<object>();
-        if (headingBlock.Inline != null)
+        #region Block Content Extraction (for comparison)
+
+        /// <summary>
+        /// 获取一个 Block 的“完整文本内容”，用来做比较。
+        /// 如果内部还有子Block（如List、Quote），会递归收集。
+        /// </summary>
+        private string GetBlockContent(Block block)
         {
-            var controls = ConvertInlineContainer(headingBlock.Inline);
-            foreach (var inl in controls)
+            switch (block)
             {
-                if (inl is Inline inline)
+                case ParagraphBlock paragraph:
+                    return GetInlineContent(paragraph.Inline);
+
+                case HeadingBlock heading:
+                    return "HEADING:" + heading.Level + ":" + GetInlineContent(heading.Inline);
+
+                case FencedCodeBlock codeBlock:
+                    return "CODE:" + codeBlock.Info + Environment.NewLine + codeBlock.Lines.ToString();
+
+                case ListBlock listBlock:
                 {
-                    var fontSize = headingBlock.Level switch
+                    // 遍历子ItemBlock
+                    var textList = new List<string>();
+                    foreach (var subItem in listBlock)
                     {
-                        1 => 24,
-                        2 => 20,
-                        3 => 18,
-                        4 => 16,
-                        5 => 14,
-                        6 => 12,
-                        _ => 12
+                        textList.Add(GetBlockContent(subItem));
+                    }
+                    return (listBlock.IsOrdered ? "ORDERLIST:" : "BULLETLIST:") + string.Join("\n", textList);
+                }
+
+                case QuoteBlock quoteBlock:
+                {
+                    // 递归收集子Block
+                    var quoteTexts = new List<string>();
+                    foreach (var subBlock in quoteBlock)
+                    {
+                        quoteTexts.Add(GetBlockContent(subBlock));
+                    }
+                    return "QUOTE:" + string.Join("\n", quoteTexts);
+                }
+
+                case ThematicBreakBlock _:
+                    return "THEMATICBREAK";
+
+                default:
+                    // 其它类型可以简单返回 block.ToString()
+                    // 或做更深入的处理
+                    return "OTHER:" + (block?.ToString() ?? "");
+            }
+        }
+
+        /// <summary>
+        /// 递归收集 InlineContainer 的文本内容
+        /// </summary>
+        private string GetInlineContent(ContainerInline? container)
+        {
+            if (container == null)
+                return "";
+
+            var textList = new List<string>();
+            var current = container.FirstChild;
+
+            while (current != null)
+            {
+                textList.Add(GetInlineText(current));
+                current = current.NextSibling;
+            }
+
+            return string.Join("", textList);
+        }
+
+        /// <summary>
+        /// 获取单个 Inline 的文本
+        /// </summary>
+        private string GetInlineText(Markdig.Syntax.Inlines.Inline mdInline)
+        {
+            switch (mdInline)
+            {
+                case EmphasisInline emphasisInline:
+                {
+                    // 根据是否**或*拼接特殊标记 + 递归内部
+                    var delim = emphasisInline.DelimiterCount == 2 ? "**" : "*";
+                    var subText = GetInlineContent(emphasisInline);
+                    return delim + subText + delim;
+                }
+                case CodeInline codeInline:
+                    return "`" + codeInline.Content + "`";
+
+                case LinkInline linkInline when linkInline.IsImage:
+                    return $"![{GetInlineContent(linkInline)}]({linkInline.Url})";
+
+                case LinkInline linkInline:
+                    return $"[{GetInlineContent(linkInline)}]({linkInline.Url})";
+
+                case LineBreakInline _:
+                    return "\n";
+
+                case LiteralInline literalInline:
+                    return literalInline.Content.ToString();
+
+                case HtmlInline htmlInline:
+                    return "<HTML>" + (htmlInline.Tag ?? "") + "</HTML>";
+
+                default:
+                    return mdInline.ToString() ?? "";
+            }
+        }
+
+        #endregion
+
+        #region Core Convert Methods
+
+        private Control? ConvertBlock(Block block)
+        {
+            switch (block)
+            {
+                case ParagraphBlock paragraph:
+                    return CreateParagraph(paragraph);
+
+                case HeadingBlock heading:
+                    return CreateHeading(heading);
+
+                case FencedCodeBlock codeBlock:
+                    return CreateCodeBlock(codeBlock);
+
+                case ListBlock listBlock:
+                    return CreateList(listBlock);
+
+                case QuoteBlock quoteBlock:
+                    return CreateQuote(quoteBlock);
+
+                case ThematicBreakBlock _:
+                    return new Border
+                    {
+                        BorderBrush = Brushes.Gray,
+                        BorderThickness = new Thickness(0, 0, 0, 1),
+                        Margin = new Thickness(0, 5, 0, 5)
                     };
 
-                    // var text = new SelectableTextBlock();
-                    // if (headingBlock.Level < 4)
-                    // {
-                    //     text.Classes.Add($"h{headingBlock.Level}");
-                    // }
-                    // else
-                    // {
-                    //     text.Classes.Add($"h4");
-                    // }
+                default:
+                    // 其它类型（简单处理）
+                    return new TextBox
+                    {
+                        IsReadOnly = true,
+                        IsEnabled = true,
+                        AcceptsReturn = true,
+                        Classes = { "markdown" },
+                        Margin = new Thickness(0),
+                        Background = Brushes.Transparent,
+                        BorderBrush = Brushes.Transparent,
+                        TextWrapping = TextWrapping.Wrap,
+                        Text = block.ToString()
+                    };
+            }
+        }
 
-                    if (container.LastOrDefault() is SelectableTextBlock span)
+        private Control CreateQuote(QuoteBlock quoteBlock)
+        {
+            var border = new Border
+            {
+                BorderBrush = Brushes.Gray,
+                BorderThickness = new Thickness(3, 0, 0, 0),
+                Padding = new Thickness(8, 5, 5, 5),
+                Margin = new Thickness(8, 5, 0, 5)
+            };
+
+            var stackPanel = new StackPanel { Orientation = Orientation.Vertical };
+
+            var headerPanel = new StackPanel
+            {
+                Orientation = Orientation.Horizontal,
+                HorizontalAlignment = HorizontalAlignment.Right,
+                Margin = new Thickness(0, 0, 0, 5),
+            };
+
+            stackPanel.Children.Add(headerPanel);
+            border.Child = stackPanel;
+
+            foreach (Block block in quoteBlock)
+            {
+                var control = ConvertBlock(block);
+                if (control != null)
+                {
+                    stackPanel.Children.Add(control);
+                }
+            }
+
+            return border;
+        }
+
+        private Control CreateParagraph(ParagraphBlock paragraph)
+        {
+            var container = new WrapPanel { Orientation = Orientation.Horizontal };
+
+            if (paragraph.Inline != null)
+            {
+                var controls = ConvertInlineContainer(paragraph.Inline);
+                foreach (var control in controls)
+                {
+                    if (control is Inline inline)
                     {
-                        span.Inlines?.Add(inline);
-                    }
-                    else
-                    {
-                        span = new SelectableTextBlock
+                        if (container.Children.LastOrDefault() is SelectableTextBlock lastSpan)
                         {
-                            FontSize = fontSize,
-                            FontWeight = FontWeight.Bold,
-                            TextWrapping = TextWrapping.Wrap,
-                            Inlines = new InlineCollection()
-                        };
-                        span.Inlines?.Add(inline);
-                        container.Add(span);
+                            lastSpan.Inlines?.Add(inline);
+                        }
+                        else
+                        {
+                            var span = new SelectableTextBlock
+                            {
+                                Inlines = new InlineCollection(),
+                                TextWrapping = TextWrapping.Wrap,
+                            };
+                            span.Inlines?.Add(inline);
+                            container.Children.Add(span);
+                        }
                     }
-                }
-                else if (inl is Control control)
-                {
-                    container.Add(control);
-                }
-            }
-        }
-
-        var panel = new WrapPanel() { };
-
-        foreach (var item in container)
-        {
-            if (item is SelectableTextBlock span)
-            {
-                panel.Children.Add(span);
-            }
-            else if (item is Control control)
-            {
-                panel.Children.Add(control);
-            }
-        }
-
-        return panel;
-    }
-
-    /// <summary>
-    /// 创建代码块控件
-    /// </summary>
-    private Control CreateCodeBlock(FencedCodeBlock fencedCodeBlock)
-    {
-        var border = new Border
-        {
-            BorderBrush = Brushes.Gray,
-            BorderThickness = new Thickness(1),
-            CornerRadius = new CornerRadius(6),
-            Padding = new Thickness(5),
-            Margin = new Thickness(0, 5, 0, 5)
-        };
-
-        var stackPanel = new StackPanel { Orientation = Orientation.Vertical };
-
-        // 头部面板：语言标签 + Copy 按钮
-        var headerPanel = new StackPanel
-        {
-            Orientation = Orientation.Horizontal,
-            HorizontalAlignment = HorizontalAlignment.Right,
-            Margin = new Thickness(0, 0, 0, 5) // 与代码区域做简单区分
-        };
-
-
-        // 如果第一个是代码块，第二行是文件路径则显示执行按钮
-        if (fencedCodeBlock.Lines.Count > 1 && CodeToolRenderEvent == null)
-        {
-            // 语言标签，给个稍微暗点的前景色以区分
-            var languageText =
-                new SelectableTextBlock { Text = fencedCodeBlock.Info,
-                    TextWrapping = TextWrapping.Wrap,
-                    Margin = new Thickness(0, 2, 10, 0) };
-
-            // Copy 按钮，与代码区域色彩区分（示例：背景灰，前景白）
-            var copyButton = new Button
-            {
-                Content = CopyText,
-                FontSize = 12,
-                Height = 24,
-                Padding = new Thickness(3),
-                Margin = new Thickness(0, 0, 0, 0)
-            };
-
-            // 根据当前系统主题设置按钮颜色
-            if (Application.Current.RequestedThemeVariant == ThemeVariant.Light)
-            {
-                copyButton.Background = SolidColorBrush.Parse("#0078d4");
-                copyButton.Foreground = SolidColorBrush.Parse("#ffffff");
-            }
-            else if (Application.Current.RequestedThemeVariant == ThemeVariant.Dark)
-            {
-                copyButton.Background = SolidColorBrush.Parse("#313131");
-                copyButton.Foreground = SolidColorBrush.Parse("#ffffff");
-            }
-            else
-            {
-                copyButton.Background = SolidColorBrush.Parse("#313131");
-                copyButton.Foreground = SolidColorBrush.Parse("#ffffff");
-            }
-
-            copyButton.Click += (sender, e) =>
-            {
-                CopyClick?.Invoke(this, e);
-                var clipboard = TopLevel.GetTopLevel(this).Clipboard;
-                clipboard.SetTextAsync(fencedCodeBlock.Lines.ToString());
-                _notificationManager.Show(new Notification("复制成功", "代码已复制到剪贴板", NotificationType.Success));
-            };
-
-            headerPanel.Children.Add(languageText);
-            headerPanel.Children.Add(copyButton);
-            stackPanel.Children.Add(headerPanel);
-
-            if (Application.Current.RequestedThemeVariant == ThemeVariant.Light)
-            {
-                stackPanel.Children.Add(CodeRender.CodeRender.Render(fencedCodeBlock.Lines.ToString(), fencedCodeBlock.Info ?? "text",
-                    ThemeName.LightPlus));
-            }
-            else
-            {
-                stackPanel.Children.Add(CodeRender.CodeRender.Render(fencedCodeBlock.Lines.ToString(), fencedCodeBlock.Info ?? "text",
-                    ThemeName.DarkPlus));
-            }
-
-        }
-        else
-        {
-
-            stackPanel.Children.Add(headerPanel);
-            CodeToolRenderEvent?.Invoke(headerPanel, stackPanel, fencedCodeBlock);
-        }
-
-        border.Child = stackPanel;
-
-        return border;
-    }
-
-
-    /// <summary>
-    /// 创建列表控件（有序或无序）
-    /// </summary>
-    private Control CreateList(ListBlock listBlock)
-    {
-        // 用 StackPanel 简单放置每个 ListItem
-        var panel = new StackPanel { Orientation = Orientation.Vertical, Spacing = 4 };
-
-        int orderIndex = 1; // 如果是有序列表，显示序号
-
-        foreach (var item in listBlock)
-        {
-            if (item is ListItemBlock listItemBlock)
-            {
-                // 每个条目也可能包含段落、子列表等
-                // 这里再递归调用 ConvertBlock
-                // 为简化演示，每个 ListItem 先加一个“前缀 SelectableTextBlock”
-                var itemPanel = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 6 };
-
-                // 显示前缀
-                var prefix = listBlock.IsOrdered
-                    ? $"{orderIndex++}." // 有序列表：1. 2. 3. ...
-                    : "  • "; // 无序列表：• • • •
-
-                itemPanel.Children.Add(new SelectableTextBlock { Text = prefix,
-                    TextWrapping = TextWrapping.Wrap,
-                    FontWeight = FontWeight.Bold, });
-
-                // 再渲染该 listItemBlock 中的所有子块
-                var subPanel = new StackPanel { Orientation = Orientation.Vertical };
-
-                foreach (var subBlock in listItemBlock)
-                {
-                    var subControl = ConvertBlock(subBlock);
-                    if (subControl != null)
+                    else if (control is Control childControl)
                     {
-                        subPanel.Children.Add(subControl);
+                        container.Children.Add(childControl);
                     }
                 }
-
-                itemPanel.Children.Add(subPanel);
-                panel.Children.Add(itemPanel);
-            }
-        }
-
-        return panel;
-    }
-
-    /// <summary>
-    /// 将 Markdig 的容器 inline（ContainerInline）转换为一组 Avalonia 的 Inline
-    /// </summary>
-    private List<object> ConvertInlineContainer(ContainerInline containerInline)
-    {
-        var results = new List<object>();
-
-        var child = containerInline?.FirstChild;
-        while (child != null)
-        {
-            var controls = ConvertInline(child);
-            foreach (var control in controls)
-            {
-                if (control is Inline inline)
-                {
-                    results.Add(inline);
-                }
-                else if (control is Control item)
-                {
-                    results.Add(item);
-                }
             }
 
-            child = child.NextSibling;
+            return container;
         }
 
-        return results;
-    }
-
-    /// <summary>
-    /// 将 Markdig 的单个 Inline 转为 Avalonia 的 Inline
-    /// </summary>
-    private List<object> ConvertInline(Markdig.Syntax.Inlines.Inline mdInline)
-    {
-        switch (mdInline)
+        private Control CreateHeading(HeadingBlock headingBlock)
         {
-            // 斜体/加粗等富文本
-            case EmphasisInline emphasisInline:
-                return (CreateEmphasisInline(emphasisInline));
+            var container = new List<object>();
 
-            // 行内代码
-            case CodeInline codeInline:
-                return [CreateCodeInline(codeInline)];
-
-            // 图片
-            case LinkInline { IsImage: true } linkInline:
-                var image = CreateImageInline(linkInline);
-                if (image != null)
-                {
-                    return [image];
-                }
-
-                return [];
-            //
-            // // 超链接
-            case LinkInline linkInline:
-                return [CreateHyperlinkInline(linkInline)];
-
-            // 换行
-            case LineBreakInline _:
-                return [new LineBreak()];
-
-
-            // 文字
-            case LiteralInline literalInline:
-                return [new Run(literalInline.Content.ToString())];
-
-
-            case HtmlInline htmlInline:
-                return [CreateHtmlInline(htmlInline)];
-
-            // 其它暂未处理
-            default:
-                // 直接转成字符串
-                return [new Run(mdInline.ToString())];
-        }
-    }
-
-    private Control? CreateImageInline(LinkInline linkInline)
-    {
-        // literalInline可能是图片
-        if (linkInline.IsImage && !string.IsNullOrEmpty(linkInline.Url))
-        {
-            var image = new ImagesRender() { Value = linkInline.Url, };
-
-            return image;
-        }
-
-        return null;
-    }
-
-    private Inline CreateHtmlInline(HtmlInline htmlInline)
-    {
-        return new Run();
-    }
-
-    private Inline CreateHyperlinkInline(LinkInline linkInline)
-    {
-        foreach (var inline in linkInline)
-        {
-            if (inline is LiteralInline literalInline)
+            if (headingBlock.Inline != null)
             {
-                var span = new Span();
-                var label = new SelectableTextBlock()
+                var controls = ConvertInlineContainer(headingBlock.Inline);
+                foreach (var inl in controls)
                 {
-                    Foreground = SolidColorBrush.Parse("#0078d4"),
-                    TextDecorations = TextDecorations.Underline,
+                    if (inl is Inline inline)
+                    {
+                        var fontSize = headingBlock.Level switch
+                        {
+                            1 => 24,
+                            2 => 20,
+                            3 => 18,
+                            4 => 16,
+                            5 => 14,
+                            6 => 12,
+                            _ => 12
+                        };
+
+                        if (container.LastOrDefault() is SelectableTextBlock span)
+                        {
+                            span.Inlines?.Add(inline);
+                        }
+                        else
+                        {
+                            span = new SelectableTextBlock
+                            {
+                                FontSize = fontSize,
+                                FontWeight = FontWeight.Bold,
+                                TextWrapping = TextWrapping.Wrap,
+                                Inlines = new InlineCollection()
+                            };
+                            span.Inlines?.Add(inline);
+                            container.Add(span);
+                        }
+                    }
+                    else if (inl is Control ctrl)
+                    {
+                        container.Add(ctrl);
+                    }
+                }
+            }
+
+            var panel = new WrapPanel();
+            foreach (var item in container)
+            {
+                switch (item)
+                {
+                    case SelectableTextBlock span:
+                        panel.Children.Add(span);
+                        break;
+                    case Control control:
+                        panel.Children.Add(control);
+                        break;
+                }
+            }
+
+            return panel;
+        }
+
+        private Control CreateCodeBlock(FencedCodeBlock fencedCodeBlock)
+        {
+            var border = new Border
+            {
+                BorderBrush = Brushes.Gray,
+                BorderThickness = new Thickness(1),
+                CornerRadius = new CornerRadius(6),
+                Padding = new Thickness(5),
+                Margin = new Thickness(0, 5, 0, 5)
+            };
+
+            var stackPanel = new StackPanel { Orientation = Orientation.Vertical };
+
+            // 头部面板：语言标签 + Copy 按钮
+            var headerPanel = new StackPanel
+            {
+                Orientation = Orientation.Horizontal,
+                HorizontalAlignment = HorizontalAlignment.Right,
+                Margin = new Thickness(0, 0, 0, 5)
+            };
+
+            // 如果 CodeToolRenderEvent == null，走默认处理，否则交给外部
+            if (fencedCodeBlock.Lines.Count > 0 && CodeToolRenderEvent == null)
+            {
+                var languageText = new SelectableTextBlock
+                {
+                    Text = fencedCodeBlock.Info,
                     TextWrapping = TextWrapping.Wrap,
-                    Text = literalInline.Content.ToString(),
-                    // 为了让鼠标变成手型
-                    Cursor = new Cursor(StandardCursorType.Hand),
-                    // 当鼠标悬停时，显示一个 Tooltip
-                };
-                label.Classes.Add("link");
-
-                // 判断label点击事件，它没有 Click 事件，所以监听鼠标按下事件 和 鼠标抬起事件，判断是否在同一位置
-                label.Tapped += (sender, e) =>
-                {
-                    if (string.IsNullOrEmpty(linkInline.Url)) return;
-                    UrlHelper.OpenUrl(linkInline.Url);
+                    Margin = new Thickness(0, 2, 10, 0)
                 };
 
-                span.Inlines.Add(label);
-
-                return span;
-            }
-        }
-
-        return new LineBreak();
-    }
-
-    /// <summary>
-    /// 加粗/斜体处理
-    /// </summary>
-    private List<object> CreateEmphasisInline(EmphasisInline emphasis)
-    {
-        // EmphasisInline 里面也可能包含子 Inline
-        var results = new List<object>();
-        var controls = ConvertInlineContainer(emphasis);
-        foreach (var c in controls)
-        {
-            if (c is Inline inline)
-            {
-                if (results.LastOrDefault() is Span span)
+                var copyButton = new Button
                 {
-                    span.Inlines.Add(inline);
+                    Content = CopyText,
+                    FontSize = 12,
+                    Height = 24,
+                    Padding = new Thickness(3),
+                    Margin = new Thickness(0)
+                };
+
+                // 根据主题设置按钮颜色
+                if (Application.Current.RequestedThemeVariant == ThemeVariant.Light)
+                {
+                    copyButton.Background = SolidColorBrush.Parse("#0078d4");
+                    copyButton.Foreground = SolidColorBrush.Parse("#ffffff");
+                }
+                else if (Application.Current.RequestedThemeVariant == ThemeVariant.Dark)
+                {
+                    copyButton.Background = SolidColorBrush.Parse("#313131");
+                    copyButton.Foreground = SolidColorBrush.Parse("#ffffff");
                 }
                 else
                 {
-                    span = new Span { Inlines = { inline } };
-                    // delimiterCount==2 表示 **加粗**，==1 表示 *斜体*
-                    if (emphasis.DelimiterCount == 2)
-                    {
-                        span.FontWeight = FontWeight.Bold;
-                    }
-                    else if (emphasis.DelimiterCount == 1)
-                    {
-                        span.FontStyle = FontStyle.Italic;
-                    }
+                    copyButton.Background = SolidColorBrush.Parse("#313131");
+                    copyButton.Foreground = SolidColorBrush.Parse("#ffffff");
+                }
 
-                    results.Add(span);
+                copyButton.Click += (sender, e) =>
+                {
+                    CopyClick?.Invoke(this, e);
+                    var clipboard = TopLevel.GetTopLevel(this).Clipboard;
+                    clipboard.SetTextAsync(fencedCodeBlock.Lines.ToString());
+
+                    _notificationManager?.Show(new Notification(
+                        "复制成功",
+                        "代码已复制到剪贴板",
+                        NotificationType.Success));
+                };
+
+                headerPanel.Children.Add(languageText);
+                headerPanel.Children.Add(copyButton);
+                stackPanel.Children.Add(headerPanel);
+
+                // 添加代码高亮控件 (假设你有 CodeRender.CodeRender)
+                if (Application.Current.RequestedThemeVariant == ThemeVariant.Light)
+                {
+                    stackPanel.Children.Add(CodeRender.CodeRender.Render(
+                        fencedCodeBlock.Lines.ToString(),
+                        fencedCodeBlock.Info ?? "text",
+                        ThemeName.LightPlus));
+                }
+                else
+                {
+                    stackPanel.Children.Add(CodeRender.CodeRender.Render(
+                        fencedCodeBlock.Lines.ToString(),
+                        fencedCodeBlock.Info ?? "text",
+                        ThemeName.DarkPlus));
                 }
             }
-            else if (c is Control item)
+            else
             {
-                results.Add(item);
+                // 如果有外部订阅 CodeToolRenderEvent，则交给外部自定义
+                stackPanel.Children.Add(headerPanel);
+                CodeToolRenderEvent?.Invoke(headerPanel, stackPanel, fencedCodeBlock);
+            }
+
+            border.Child = stackPanel;
+            return border;
+        }
+
+        private Control CreateList(ListBlock listBlock)
+        {
+            var panel = new StackPanel { Orientation = Orientation.Vertical, Spacing = 4 };
+            int orderIndex = 1; // 有序列表的起始索引
+
+            foreach (var item in listBlock)
+            {
+                if (item is ListItemBlock listItemBlock)
+                {
+                    var itemPanel = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 6 };
+
+                    var prefix = listBlock.IsOrdered ? $"{orderIndex++}." : "• ";
+                    itemPanel.Children.Add(new SelectableTextBlock
+                    {
+                        Text = prefix,
+                        TextWrapping = TextWrapping.Wrap,
+                        FontWeight = FontWeight.Bold
+                    });
+
+                    var subPanel = new StackPanel { Orientation = Orientation.Vertical };
+                    foreach (var subBlock in listItemBlock)
+                    {
+                        var subControl = ConvertBlock(subBlock);
+                        if (subControl != null)
+                        {
+                            subPanel.Children.Add(subControl);
+                        }
+                    }
+
+                    itemPanel.Children.Add(subPanel);
+                    panel.Children.Add(itemPanel);
+                }
+            }
+
+            return panel;
+        }
+
+        #endregion
+
+        #region Inline Handling
+
+        private List<object> ConvertInlineContainer(ContainerInline containerInline)
+        {
+            var results = new List<object>();
+            var child = containerInline?.FirstChild;
+
+            while (child != null)
+            {
+                var controls = ConvertInline(child);
+                results.AddRange(controls);
+                child = child.NextSibling;
+            }
+
+            return results;
+        }
+
+        private List<object> ConvertInline(Markdig.Syntax.Inlines.Inline mdInline)
+        {
+            switch (mdInline)
+            {
+                case EmphasisInline emphasisInline:
+                    return CreateEmphasisInline(emphasisInline);
+
+                case CodeInline codeInline:
+                    return new List<object> { CreateCodeInline(codeInline) };
+
+                case LinkInline { IsImage: true } linkImg:
+                {
+                    var img = CreateImageInline(linkImg);
+                    return img != null ? new List<object> { img } : new List<object>();
+                }
+                case LinkInline linkInline:
+                    return new List<object> { CreateHyperlinkInline(linkInline) };
+
+                case LineBreakInline _:
+                    return new List<object> { new LineBreak() };
+
+                case LiteralInline literalInline:
+                    return new List<object> { new Run(literalInline.Content.ToString()) };
+
+                case HtmlInline htmlInline:
+                    return new List<object> { CreateHtmlInline(htmlInline) };
+
+                default:
+                    return new List<object> { new Run(mdInline.ToString()) };
             }
         }
 
+        private Control? CreateImageInline(LinkInline linkInline)
+        {
+            if (!string.IsNullOrEmpty(linkInline.Url))
+            {
+                return new ImagesRender { Value = linkInline.Url };
+            }
+            return null;
+        }
 
-        return results;
-    }
+        private Inline CreateHtmlInline(HtmlInline htmlInline)
+        {
+            // 简单处理：实际可进一步解析 htmlInline.Tag
+            return new Run();
+        }
 
-    /// <summary>
-    /// 内联代码
-    /// </summary>
-    private Inline CreateCodeInline(CodeInline codeInline)
-    {
-        if (Application.Current.RequestedThemeVariant == ThemeVariant.Light)
+        private Inline CreateHyperlinkInline(LinkInline linkInline)
         {
-            return new Run(codeInline.Content)
+            foreach (var inline in linkInline)
             {
-                FontFamily = new FontFamily("Consolas"),
-                Foreground = SolidColorBrush.Parse("#000000"),
-                Background = SolidColorBrush.Parse("#f0f0f0"),
-            };
+                if (inline is LiteralInline literalInline)
+                {
+                    var span = new Span();
+                    var label = new SelectableTextBlock
+                    {
+                        Foreground = SolidColorBrush.Parse("#0078d4"),
+                        TextDecorations = TextDecorations.Underline,
+                        TextWrapping = TextWrapping.Wrap,
+                        Text = literalInline.Content.ToString(),
+                        Cursor = new Cursor(StandardCursorType.Hand)
+                    };
+                    label.Classes.Add("link");
+
+                    label.Tapped += (sender, e) =>
+                    {
+                        if (!string.IsNullOrEmpty(linkInline.Url))
+                            UrlHelper.OpenUrl(linkInline.Url);
+                    };
+
+                    span.Inlines.Add(label);
+                    return span;
+                }
+            }
+            return new LineBreak();
         }
-        else if (Application.Current.RequestedThemeVariant == ThemeVariant.Dark)
+
+        private List<object> CreateEmphasisInline(EmphasisInline emphasis)
         {
-            return new Run(codeInline.Content)
+            var results = new List<object>();
+            var controls = ConvertInlineContainer(emphasis);
+
+            foreach (var c in controls)
             {
-                FontFamily = new FontFamily("Consolas"),
-                Foreground = SolidColorBrush.Parse("#f0f0f0"),
-                Background = SolidColorBrush.Parse("#313131"),
-            };
+                if (c is Inline inline)
+                {
+                    if (results.LastOrDefault() is Span lastSpan)
+                    {
+                        lastSpan.Inlines.Add(inline);
+                    }
+                    else
+                    {
+                        var spanNew = new Span { Inlines = { inline } };
+                        if (emphasis.DelimiterCount == 2)
+                            spanNew.FontWeight = FontWeight.Bold;
+                        else if (emphasis.DelimiterCount == 1)
+                            spanNew.FontStyle = FontStyle.Italic;
+
+                        results.Add(spanNew);
+                    }
+                }
+                else if (c is Control ctrl)
+                {
+                    results.Add(ctrl);
+                }
+            }
+
+            return results;
         }
-        else
+
+        private Inline CreateCodeInline(CodeInline codeInline)
         {
-            return new Run(codeInline.Content)
+            if (Application.Current.RequestedThemeVariant == ThemeVariant.Light)
             {
-                FontFamily = new FontFamily("Consolas"),
-                Foreground = SolidColorBrush.Parse("#f0f0f0"),
-                Background = SolidColorBrush.Parse("#313131"),
-            };
+                return new Run(codeInline.Content)
+                {
+                    FontFamily = new FontFamily("Consolas"),
+                    Foreground = SolidColorBrush.Parse("#000000"),
+                    Background = SolidColorBrush.Parse("#f0f0f0"),
+                };
+            }
+            else if (Application.Current.RequestedThemeVariant == ThemeVariant.Dark)
+            {
+                return new Run(codeInline.Content)
+                {
+                    FontFamily = new FontFamily("Consolas"),
+                    Foreground = SolidColorBrush.Parse("#f0f0f0"),
+                    Background = SolidColorBrush.Parse("#313131"),
+                };
+            }
+            else
+            {
+                return new Run(codeInline.Content)
+                {
+                    FontFamily = new FontFamily("Consolas"),
+                    Foreground = SolidColorBrush.Parse("#f0f0f0"),
+                    Background = SolidColorBrush.Parse("#313131"),
+                };
+            }
         }
+
+        #endregion
+
+        #region INotifyPropertyChanged Support
+
+        protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+
+        #endregion
     }
 }
