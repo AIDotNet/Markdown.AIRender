@@ -107,7 +107,7 @@ Markdown是一种轻量级的「标记语言」。
 
 插入图片，格式如下：
 
-![这里写图片描述](https://www.nginx.cn/wp-content/uploads/2020/03/qrcode_for_gh_82cf87d482f0_258.jpg)
+![这里写图片描述](https://fastly.picsum.photos/id/22/200/300.jpg?hmac=dffxO8G-Bxyn7S8ye3hMo7eRQgL9iW5yJJ_hOV6-CwI)
 
 支持 jpg、png、gif、svg 等图片格式，**其中 svg 文件仅可在微信公众平台中使用**，svg 文件示例如下：
 
