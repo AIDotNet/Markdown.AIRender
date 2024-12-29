@@ -1,0 +1,12 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Localization language="English" description="English" cultureName="en-US">
+  <MainWindow>
+    <ApplicationThemeLabel>System Theme:</ApplicationThemeLabel>
+    <ThemeDark>Dark Mode</ThemeDark>
+    <ThemeLight>Light Mode</ThemeLight>
+    <MarkdownThemeColorLabel>Markdown Theme Color</MarkdownThemeColorLabel>
+    <MarkdownThemeSelectPlaceholder>Please select a theme color.</MarkdownThemeSelectPlaceholder>
+    <ApplicationLanguageLabel>System Language:</ApplicationLanguageLabel>
+    <ApplicationLanguageSelectPlaceholder>Please select a language.</ApplicationLanguageSelectPlaceholder>
+  </MainWindow>
+</Localization>

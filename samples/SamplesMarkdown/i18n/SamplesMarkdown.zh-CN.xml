@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+
+<Localization language="Chinese (Simplified)" description="中文简体" cultureName="zh-CN">
+  <MainWindow>
+    <ApplicationThemeLabel>系统主题：</ApplicationThemeLabel>
+    <ThemeDark>黑夜模式</ThemeDark>
+    <ThemeLight>白天模式</ThemeLight>
+    <MarkdownThemeColorLabel>Markdown主题色</MarkdownThemeColorLabel>
+    <MarkdownThemeSelectPlaceholder>请选择一个主题色</MarkdownThemeSelectPlaceholder>
+    <ApplicationLanguageLabel>系统语言：</ApplicationLanguageLabel>
+    <ApplicationLanguageSelectPlaceholder>请选择语言</ApplicationLanguageSelectPlaceholder>
+  </MainWindow>
+</Localization>
