@@ -549,17 +549,6 @@ namespace MarkdownAIRender.Controls.MarkdownRender
                 {
                     if (inl is Inline inline)
                     {
-                        var fontSize = headingBlock.Level switch
-                        {
-                            1 => 24,
-                            2 => 20,
-                            3 => 18,
-                            4 => 16,
-                            5 => 14,
-                            6 => 12,
-                            _ => 12
-                        };
-
                         if (container.LastOrDefault() is SelectableTextBlock span)
                         {
                             span.Inlines?.Add(inline);
@@ -568,9 +557,7 @@ namespace MarkdownAIRender.Controls.MarkdownRender
                         {
                             span = new SelectableTextBlock
                             {
-                                FontSize = fontSize,
-                                FontWeight = FontWeight.Bold,
-                                TextWrapping = TextWrapping.Wrap,
+                                Classes = { headingBlock.Level <= 6 ? $"MdH{headingBlock.Level}" : "MdHn" },
                                 Inlines = new InlineCollection()
                             };
                             span.Inlines?.Add(inline);
@@ -632,10 +619,7 @@ namespace MarkdownAIRender.Controls.MarkdownRender
                     Margin = new Thickness(0, 2, 10, 0)
                 };
 
-                var copyButton = new Button
-                {
-                    Classes = { "Copy" }
-                };
+                var copyButton = new Button { Classes = { "Copy" } };
 
                 // 根据主题设置按钮颜色
                 if (Application.Current.RequestedThemeVariant == ThemeVariant.Light)

@@ -9,6 +9,8 @@ using Avalonia.Styling;
 using AvaloniaXmlTranslator;
 using AvaloniaXmlTranslator.Models;
 
+using MarkdownAIRender.Controls.MarkdownRender;
+
 namespace SamplesMarkdown.ViewModels;
 
 public partial class MainWindowViewModel : ViewModelBase
@@ -16,6 +18,7 @@ public partial class MainWindowViewModel : ViewModelBase
     public MainWindowViewModel()
     {
         InitLanguage();
+        InitMarkdownThemes();
     }
 
     #region Properties
@@ -27,6 +30,21 @@ public partial class MainWindowViewModel : ViewModelBase
         get => markdown;
         set => this.SetProperty(ref markdown, value);
     }
+
+    public ObservableCollection<string> MarkdownThemes { get; private set; }
+
+    private string? _selectedMarkdownTheme;
+
+    public string? SelectedMarkdownTheme
+    {
+        get => _selectedMarkdownTheme;
+        set
+        {
+            this.SetProperty(ref _selectedMarkdownTheme, value);
+            MarkdownClass.ChangeTheme(value);;
+        }
+    }
+
 
     public ObservableCollection<LocalizationLanguage> Languages { get; private set; }
 
@@ -45,6 +63,7 @@ public partial class MainWindowViewModel : ViewModelBase
     #endregion
 
     #region Command handlers
+
     public async Task RaiseChangeThemeHandler()
     {
         App.Current.RequestedThemeVariant = App.Current.RequestedThemeVariant == ThemeVariant.Dark
@@ -64,6 +83,12 @@ public partial class MainWindowViewModel : ViewModelBase
         var language = Thread.CurrentThread.CurrentCulture.Name;
         SelectedLanguage = Languages.FirstOrDefault(l => l.CultureName == language);
     }
+
+    private void InitMarkdownThemes()
+    {
+        MarkdownThemes = new ObservableCollection<string>(MarkdownClass.Themes);
+    }
+
     private void SetLanguage()
     {
         var culture = new CultureInfo(SelectedLanguage?.CultureName);
