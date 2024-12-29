@@ -1,6 +1,9 @@
 ﻿using Avalonia;
 
 using System;
+#if DEBUG
+using Nlnet.Avalonia.DevTools;
+#endif
 
 namespace SamplesMarkdown;
 
@@ -18,5 +21,8 @@ sealed class Program
         => AppBuilder.Configure<App>()
             .UsePlatformDetect()
             .WithInterFont()
+#if DEBUG
+            .UseDevToolsForAvalonia()
+#endif
             .LogToTrace();
 }
