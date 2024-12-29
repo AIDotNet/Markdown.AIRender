@@ -19,7 +19,7 @@
 
     <Grid RowDefinitions="Auto *">
         <StackPanel Orientation="Horizontal" Margin="0 10" VerticalAlignment="Center">
-            <SelectableTextBlock Text="Theme: " VerticalAlignment="Center" />
+            <SelectableTextBlock Text="Theme: " VerticalAlignment="Center" Classes="MdH1" />
             <ToggleSwitch OnContent="Dark" OffContent="Light" VerticalAlignment="Center"
                           Command="{Binding RaiseChangeThemeHandler}" Margin="5 0 10 0" />
 
