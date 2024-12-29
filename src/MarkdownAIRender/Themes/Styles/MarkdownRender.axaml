@@ -1,26 +1,28 @@
 <Styles xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:md="https://github.com/AIDotNet/Markdown.AIRender"
         xmlns:i18n="https://codewf.com"
         xmlns:language="clr-namespace:Localization">
-    <Style Selector="SelectableTextBlock.h1">
+    <Style Selector="SelectableTextBlock.mh1">
         <Setter Property="FontSize" Value="{DynamicResource TextBlockTitleH1FontSize}" />
         <Setter Property="FontWeight" Value="Bold" />
         <Setter Property="TextWrapping" Value="Wrap"></Setter>
     </Style>
 
-    <Style Selector="SelectableTextBlock.h2">
+    <Style Selector="SelectableTextBlock.mh2">
+        <Setter Property="md:MarkdownClassExtensions.MdClass" Value="{Binding RelativeSource={RelativeSource Self}}" />
         <Setter Property="FontSize" Value="{DynamicResource TextBlockTitleH2FontSize}" />
         <Setter Property="FontWeight" Value="Bold" />
         <Setter Property="TextWrapping" Value="Wrap"></Setter>
     </Style>
 
-    <Style Selector="SelectableTextBlock.h3">
+    <Style Selector="SelectableTextBlock.mh3">
         <Setter Property="FontSize" Value="{DynamicResource TextBlockTitleH3FontSize}" />
         <Setter Property="FontWeight" Value="Bold" />
         <Setter Property="TextWrapping" Value="Wrap"></Setter>
     </Style>
 
-    <Style Selector="SelectableTextBlock.h4">
+    <Style Selector="SelectableTextBlock.mh4">
         <Setter Property="FontSize" Value="{DynamicResource TextBlockTitleH4FontSize}" />
         <Setter Property="FontWeight" Value="Bold" />
         <Setter Property="TextWrapping" Value="Wrap"></Setter>

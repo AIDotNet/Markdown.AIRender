@@ -3,7 +3,7 @@
         xmlns:vm="using:SamplesMarkdown.ViewModels"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:markdownRender="clr-namespace:MarkdownAIRender.Controls.MarkdownRender;assembly=MarkdownAIRender"
+        xmlns:md="https://github.com/AIDotNet/Markdown.AIRender"
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
         x:Class="SamplesMarkdown.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
@@ -30,7 +30,7 @@
                 SelectedItem="{Binding SelectedLanguage}" />
         </StackPanel>
         <ScrollViewer Grid.Row="1">
-            <markdownRender:MarkdownRender Value="{Binding Markdown}" />
+            <md:MarkdownRender Value="{Binding Markdown}" />
         </ScrollViewer>
     </Grid>
 </Window>
