@@ -471,13 +471,7 @@ namespace MarkdownAIRender.Controls.MarkdownRender
 
         private Control CreateQuote(QuoteBlock quoteBlock)
         {
-            var border = new Border
-            {
-                BorderBrush = Brushes.Gray,
-                BorderThickness = new Thickness(3, 0, 0, 0),
-                Padding = new Thickness(8, 5, 5, 5),
-                Margin = new Thickness(8, 5, 0, 5)
-            };
+            var border = new Border { Classes = { "MdQuoteBorder" } };
 
             var stackPanel = new StackPanel { Orientation = Orientation.Vertical };
 
@@ -522,7 +516,7 @@ namespace MarkdownAIRender.Controls.MarkdownRender
                         {
                             var span = new SelectableTextBlock
                             {
-                                Inlines = new InlineCollection(), TextWrapping = TextWrapping.Wrap,
+                                Classes = { "MdP" }, Inlines = new InlineCollection(),
                             };
                             span.Inlines?.Add(inline);
                             container.Children.Add(span);
@@ -695,7 +689,10 @@ namespace MarkdownAIRender.Controls.MarkdownRender
                     var prefix = listBlock.IsOrdered ? $"{orderIndex++}." : "• ";
                     itemPanel.Children.Add(new SelectableTextBlock
                     {
-                        Text = prefix, TextWrapping = TextWrapping.Wrap, FontWeight = FontWeight.Bold
+                        Text = prefix,
+                        TextWrapping = TextWrapping.Wrap,
+                        FontWeight = FontWeight.Bold,
+                        VerticalAlignment = VerticalAlignment.Center
                     });
 
                     var subPanel = new StackPanel { Orientation = Orientation.Vertical };
@@ -792,9 +789,7 @@ namespace MarkdownAIRender.Controls.MarkdownRender
                     var span = new Span();
                     var label = new SelectableTextBlock
                     {
-                        Foreground = SolidColorBrush.Parse("#0078d4"),
-                        TextDecorations = TextDecorations.Underline,
-                        TextWrapping = TextWrapping.Wrap,
+                        Classes = { "MdLink" },
                         Text = literalInline.Content.ToString(),
                         Cursor = new Cursor(StandardCursorType.Hand)
                     };

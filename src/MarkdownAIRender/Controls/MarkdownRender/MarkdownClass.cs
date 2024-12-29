@@ -1,8 +1,5 @@
 using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Styling;
-
-using TextMateSharp.Grammars;
 
 namespace MarkdownAIRender.Controls.MarkdownRender;
 
@@ -18,9 +15,12 @@ public class MarkdownClass : AvaloniaObject
 
     #region Public Properties
 
-    public static List<string> Themes { get; private set; } = new List<string>() { "Inkiness", "OrangeHeart" };
+    public static List<MarkdownTheme> Themes { get; private set; } = new()
+    {
+        new("Ä«ºÚ", "Inkiness"), new("³ÈÐÄ", "OrangeHeart"), new("æ±×Ï", "ColorfulPurple")
+    };
 
-    public static string CurrentTheme { get; private set; } = "Inkiness";
+    public static string CurrentThemeKey { get; private set; } = "OrangeHeart";
 
     #endregion
 
@@ -46,7 +46,7 @@ public class MarkdownClass : AvaloniaObject
 
     public static void ChangeTheme(string themeName)
     {
-        CurrentTheme = themeName;
+        CurrentThemeKey = themeName;
         foreach (var control in _boundControls)
         {
             ChangeTheme(control.Key, control.Value);
@@ -64,7 +64,8 @@ public class MarkdownClass : AvaloniaObject
         {
             control.Classes.Add(baseClass);
         }
-        var newUpdateMdClass = $"{baseClass}_{CurrentTheme}";
+
+        var newUpdateMdClass = $"{baseClass}_{CurrentThemeKey}";
         if (control.Classes.Contains(newUpdateMdClass))
         {
             return;
@@ -102,3 +103,5 @@ public class MarkdownClass : AvaloniaObject
 
     #endregion
 }
+
+public record MarkdownTheme(string Name, string Key);

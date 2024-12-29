@@ -4,4 +4,5 @@
     <StyleInclude Source="avares://MarkdownAIRender/Themes/MarkdownThemes/Light.axaml" />
     <StyleInclude Source="avares://MarkdownAIRender/Themes/MarkdownThemes/OrangeHeart.axaml" />
     <StyleInclude Source="avares://MarkdownAIRender/Themes/MarkdownThemes/Inkiness.axaml" />
+    <StyleInclude Source="avares://MarkdownAIRender/Themes/MarkdownThemes/ColorfulPurple.axaml" />
 </Styles>

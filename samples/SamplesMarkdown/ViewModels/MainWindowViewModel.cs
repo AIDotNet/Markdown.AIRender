@@ -31,17 +31,18 @@ public partial class MainWindowViewModel : ViewModelBase
         set => this.SetProperty(ref markdown, value);
     }
 
-    public ObservableCollection<string> MarkdownThemes { get; private set; }
+    public ObservableCollection<MarkdownTheme> MarkdownThemes { get; private set; }
 
-    private string? _selectedMarkdownTheme;
+    private MarkdownTheme? _selectedMarkdownTheme;
 
-    public string? SelectedMarkdownTheme
+    public MarkdownTheme? SelectedMarkdownTheme
     {
         get => _selectedMarkdownTheme;
         set
         {
             this.SetProperty(ref _selectedMarkdownTheme, value);
-            MarkdownClass.ChangeTheme(value);;
+            MarkdownClass.ChangeTheme(_selectedMarkdownTheme.Key);
+            ;
         }
     }
 
@@ -86,7 +87,8 @@ public partial class MainWindowViewModel : ViewModelBase
 
     private void InitMarkdownThemes()
     {
-        MarkdownThemes = new ObservableCollection<string>(MarkdownClass.Themes);
+        MarkdownThemes = new ObservableCollection<MarkdownTheme>(MarkdownClass.Themes);
+        SelectedMarkdownTheme = MarkdownClass.Themes.FirstOrDefault(item => item.Key == MarkdownClass.CurrentThemeKey);
     }
 
     private void SetLanguage()

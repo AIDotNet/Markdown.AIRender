@@ -4,7 +4,7 @@
         xmlns:i18n="https://codewf.com"
         xmlns:language="clr-namespace:Localization">
 
-    <Style Selector="SelectableTextBlock.MdP_Inkiness">
+    <Style Selector="SelectableTextBlock.MdP_ColorfulPurple">
         <Setter Property="TextWrapping" Value="Wrap" />
         <Setter Property="Foreground" Value="#3e3e3e" />
         <Setter Property="FontSize" Value="16" />
@@ -12,27 +12,28 @@
         <Setter Property="Margin" Value="0 5" />
     </Style>
 
-    <Style Selector="SelectableTextBlock.MdH1_Inkiness">
+    <Style Selector="SelectableTextBlock.MdH1_ColorfulPurple">
         <Setter Property="FontSize" Value="24" />
         <Setter Property="FontWeight" Value="Bold" />
         <Setter Property="TextWrapping" Value="Wrap" />
-        <Setter Property="Foreground" Value="#3e3e3e" />
+        <Setter Property="Foreground" Value="#773098" />
+        <Setter Property="Padding" Value="0" />
         <Setter Property="LineHeight" Value="26" />
         <Setter Property="Margin" Value="0 5" />
     </Style>
 
-    <Style Selector="SelectableTextBlock.MdH2_Inkiness">
+    <Style Selector="SelectableTextBlock.MdH2_ColorfulPurple">
         <Setter Property="FontSize" Value="20" />
         <Setter Property="FontWeight" Value="Bold" />
         <Setter Property="TextWrapping" Value="Wrap" />
-        <Setter Property="Background" Value="#5c5c5c" />
-        <Setter Property="Foreground" Value="#3e3e3e" />
-        <Setter Property="Padding" Value="5 15" />
+        <Setter Property="Background" Value="#EF7060" />
+        <Setter Property="Foreground" Value="#ffffff" />
+        <Setter Property="Padding" Value="3 10 1 1" />
+        <Setter Property="Margin" Value="0 0 3 0" />
         <Setter Property="LineHeight" Value="26" />
-        <Setter Property="Margin" Value="0 5" />
     </Style>
 
-    <Style Selector="SelectableTextBlock.MdH3_Inkiness">
+    <Style Selector="SelectableTextBlock.MdH3_ColorfulPurple">
         <Setter Property="FontSize" Value="18" />
         <Setter Property="FontWeight" Value="Bold" />
         <Setter Property="TextWrapping" Value="Wrap" />
@@ -41,7 +42,7 @@
         <Setter Property="Margin" Value="0 5" />
     </Style>
 
-    <Style Selector="SelectableTextBlock.MdH4_Inkiness">
+    <Style Selector="SelectableTextBlock.MdH4_ColorfulPurple">
         <Setter Property="FontSize" Value="16" />
         <Setter Property="FontWeight" Value="Bold" />
         <Setter Property="TextWrapping" Value="Wrap" />
@@ -50,7 +51,7 @@
         <Setter Property="Margin" Value="0 5" />
     </Style>
 
-    <Style Selector="SelectableTextBlock.MdH5_Inkiness">
+    <Style Selector="SelectableTextBlock.MdH5_ColorfulPurple">
         <Setter Property="FontSize" Value="14" />
         <Setter Property="FontWeight" Value="Bold" />
         <Setter Property="TextWrapping" Value="Wrap" />
@@ -59,7 +60,7 @@
         <Setter Property="Margin" Value="0 5" />
     </Style>
 
-    <Style Selector="SelectableTextBlock.MdH6_Inkiness">
+    <Style Selector="SelectableTextBlock.MdH6_ColorfulPurple">
         <Setter Property="FontSize" Value="12" />
         <Setter Property="FontWeight" Value="Bold" />
         <Setter Property="TextWrapping" Value="Wrap" />
@@ -68,7 +69,7 @@
         <Setter Property="Margin" Value="0 5" />
     </Style>
 
-    <Style Selector="SelectableTextBlock.MdHn_Inkiness">
+    <Style Selector="SelectableTextBlock.MdHn_ColorfulPurple">
         <Setter Property="FontSize" Value="12" />
         <Setter Property="FontWeight" Value="Bold" />
         <Setter Property="TextWrapping" Value="Wrap" />

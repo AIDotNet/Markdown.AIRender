@@ -3,6 +3,15 @@
         xmlns:md="https://github.com/AIDotNet/Markdown.AIRender"
         xmlns:i18n="https://codewf.com"
         xmlns:language="clr-namespace:Localization">
+
+    <Style Selector="Border.MdQuoteBorder">
+        <Setter Property="md:MarkdownClass.Target" Value="{Binding $self}" />
+        <Setter Property="BorderBrush" Value="Gray" />
+        <Setter Property="BorderThickness" Value="3 0 0 0" />
+        <Setter Property="Padding" Value="8 5 5 5" />
+        <Setter Property="Margin" Value="8 5 0 5" />
+    </Style>
+
     <Style Selector="SelectableTextBlock.MdH1">
         <Setter Property="md:MarkdownClass.Target" Value="{Binding $self}" />
     </Style>
@@ -31,9 +40,15 @@
         <Setter Property="md:MarkdownClass.Target" Value="{Binding $self}" />
     </Style>
 
-    <Style Selector="SelectableTextBlock.p">
-        <Setter Property="FontSize" Value="12" />
+    <Style Selector="SelectableTextBlock.MdP">
+        <Setter Property="md:MarkdownClass.Target" Value="{Binding $self}" />
+    </Style>
+
+    <Style Selector="SelectableTextBlock.MdLink">
         <Setter Property="TextWrapping" Value="Wrap" />
+        <Setter Property="Foreground" Value="#0078d4" />
+        <Setter Property="FontSize" Value="16" />
+        <Setter Property="TextDecorations" Value="Underline" />
     </Style>
 
     <Style Selector="TextBox.markdown">
