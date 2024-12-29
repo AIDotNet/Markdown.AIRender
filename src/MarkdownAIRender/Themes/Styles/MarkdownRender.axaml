@@ -1,32 +1,54 @@
 <Styles xmlns="https://github.com/avaloniaui"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-    <Style Selector="SelectableTextBlock.h1">
-        <Setter Property="FontSize" Value="{DynamicResource TextBlockTitleH1FontSize}" />
-        <Setter Property="FontWeight" Value="Bold" />
-        <Setter Property="TextWrapping" Value="Wrap"></Setter>
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:md="https://github.com/AIDotNet/Markdown.AIRender"
+        xmlns:i18n="https://codewf.com"
+        xmlns:language="clr-namespace:Localization">
+
+    <Style Selector="Border.MdQuoteBorder">
+        <Setter Property="md:MarkdownClass.Target" Value="{Binding $self}" />
+        <Setter Property="BorderBrush" Value="Gray" />
+        <Setter Property="BorderThickness" Value="3 0 0 0" />
+        <Setter Property="Padding" Value="8 5 5 5" />
+        <Setter Property="Margin" Value="8 5 0 5" />
     </Style>
 
-    <Style Selector="SelectableTextBlock.h2">
-        <Setter Property="FontSize" Value="{DynamicResource TextBlockTitleH2FontSize}" />
-        <Setter Property="FontWeight" Value="Bold" />
-        <Setter Property="TextWrapping" Value="Wrap"></Setter>
+    <Style Selector="SelectableTextBlock.MdH1">
+        <Setter Property="md:MarkdownClass.Target" Value="{Binding $self}" />
     </Style>
 
-    <Style Selector="SelectableTextBlock.h3">
-        <Setter Property="FontSize" Value="{DynamicResource TextBlockTitleH3FontSize}" />
-        <Setter Property="FontWeight" Value="Bold" />
-        <Setter Property="TextWrapping" Value="Wrap"></Setter>
+    <Style Selector="SelectableTextBlock.MdH2">
+        <Setter Property="md:MarkdownClass.Target" Value="{Binding $self}" />
     </Style>
 
-    <Style Selector="SelectableTextBlock.h4">
-        <Setter Property="FontSize" Value="{DynamicResource TextBlockTitleH4FontSize}" />
-        <Setter Property="FontWeight" Value="Bold" />
-        <Setter Property="TextWrapping" Value="Wrap"></Setter>
+    <Style Selector="SelectableTextBlock.MdH3">
+        <Setter Property="md:MarkdownClass.Target" Value="{Binding $self}" />
     </Style>
 
-    <Style Selector="SelectableTextBlock.p">
-        <Setter Property="FontSize" Value="{DynamicResource TextBlockFontSize}" />
+    <Style Selector="SelectableTextBlock.MdH4">
+        <Setter Property="md:MarkdownClass.Target" Value="{Binding $self}" />
+    </Style>
+
+    <Style Selector="SelectableTextBlock.MdH5">
+        <Setter Property="md:MarkdownClass.Target" Value="{Binding $self}" />
+    </Style>
+
+    <Style Selector="SelectableTextBlock.MdH6">
+        <Setter Property="md:MarkdownClass.Target" Value="{Binding $self}" />
+    </Style>
+
+    <Style Selector="SelectableTextBlock.MdHn">
+        <Setter Property="md:MarkdownClass.Target" Value="{Binding $self}" />
+    </Style>
+
+    <Style Selector="SelectableTextBlock.MdP">
+        <Setter Property="md:MarkdownClass.Target" Value="{Binding $self}" />
+    </Style>
+
+    <Style Selector="SelectableTextBlock.MdLink">
         <Setter Property="TextWrapping" Value="Wrap" />
+        <Setter Property="Foreground" Value="#0078d4" />
+        <Setter Property="FontSize" Value="16" />
+        <Setter Property="TextDecorations" Value="Underline" />
     </Style>
 
     <Style Selector="TextBox.markdown">
@@ -53,6 +75,14 @@
         <Setter Property="BorderThickness" Value="0" />
         <Setter Property="BorderBrush" Value="Transparent" />
         <Setter Property="Padding" Value="0" />
+        <Setter Property="Margin" Value="0" />
+    </Style>
+
+    <Style Selector="Button.Copy">
+        <Setter Property="Content" Value="{i18n:I18n {x:Static language:MarkdownRender.CopyButtonContent}}" />
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="Height" Value="24" />
+        <Setter Property="Padding" Value="3" />
         <Setter Property="Margin" Value="0" />
     </Style>
 </Styles>

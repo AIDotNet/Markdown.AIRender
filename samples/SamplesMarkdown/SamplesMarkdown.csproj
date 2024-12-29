@@ -22,6 +22,14 @@
     </ItemGroup>
 
     <ItemGroup>
+      <None Include="i18n\Language.cs">
+        <DesignTime>True</DesignTime>
+        <AutoGen>True</AutoGen>
+        <DependentUpon>Language.tt</DependentUpon>
+      </None>
+    </ItemGroup>
+
+    <ItemGroup>
         <PackageReference Include="Avalonia" Version="$(AvaloniaVersion)" />
         <PackageReference Include="Avalonia.Desktop" Version="$(AvaloniaVersion)" />
         <PackageReference Include="Avalonia.Themes.Fluent" Version="$(AvaloniaVersion)" />
@@ -37,10 +45,30 @@
     </ItemGroup>
 
     <ItemGroup>
+      <None Update="i18n\Language.tt">
+        <Generator>TextTemplatingFileGenerator</Generator>
+        <LastGenOutput>Language.cs</LastGenOutput>
+      </None>
+      <None Update="i18n\SamplesMarkdown.en-US.xml">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
+      <None Update="i18n\SamplesMarkdown.ja-JP.xml">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
+      <None Update="i18n\SamplesMarkdown.zh-CN.xml">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
+      <None Update="i18n\SamplesMarkdown.zh-Hant.xml">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
       <None Update="logo.png">
         <Pack>true</Pack>
         <PackagePath></PackagePath>
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </None>
+    </ItemGroup>
+
+    <ItemGroup>
+      <Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
     </ItemGroup>
 </Project>

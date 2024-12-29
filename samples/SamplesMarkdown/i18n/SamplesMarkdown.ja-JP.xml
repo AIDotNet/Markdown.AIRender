@@ -1,0 +1,12 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Localization language="Japanese" description="日本語" cultureName="ja-JP">
+  <MainWindow>
+    <ApplicationThemeLabel>システムテーマ：</ApplicationThemeLabel>
+    <ThemeDark>ダークモード</ThemeDark>
+    <ThemeLight>ライトモード</ThemeLight>
+    <MarkdownThemeColorLabel>Markdownのテーマ色</MarkdownThemeColorLabel>
+    <MarkdownThemeSelectPlaceholder>テーマ色を選択してください。</MarkdownThemeSelectPlaceholder>
+    <ApplicationLanguageLabel>システム言語：</ApplicationLanguageLabel>
+    <ApplicationLanguageSelectPlaceholder>言語を選択してください。</ApplicationLanguageSelectPlaceholder>
+  </MainWindow>
+</Localization>

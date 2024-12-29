@@ -2,8 +2,6 @@
     <Styles.Resources>
         <ResourceDictionary>
             <ResourceDictionary.ThemeDictionaries>
-                <ResourceInclude x:Key="Dark" Source="avares://MarkdownAIRender/Themes/Dark/_index.axaml" />
-                <ResourceInclude x:Key="Light" Source="avares://MarkdownAIRender/Themes/Light/_index.axaml" />
             </ResourceDictionary.ThemeDictionaries>
             <ResourceDictionary.MergedDictionaries>
                 <ResourceInclude Source="avares://MarkdownAIRender/Themes/Controls/_index.axaml" />
@@ -12,4 +10,5 @@
         </ResourceDictionary>
     </Styles.Resources>
     <StyleInclude Source="avares://MarkdownAIRender/Themes/Styles/_index.axaml" />
+    <StyleInclude Source="avares://MarkdownAIRender/Themes/MarkdownThemes/_index.axaml" />
 </Styles>

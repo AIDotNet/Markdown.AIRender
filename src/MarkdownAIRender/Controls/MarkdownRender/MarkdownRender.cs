@@ -16,6 +16,8 @@ using Avalonia.Reactive;
 using Avalonia.Styling;
 using Avalonia.VisualTree;
 
+using AvaloniaXmlTranslator;
+
 using Markdig;
 using Markdig.Syntax;
 using Markdig.Syntax.Inlines;
@@ -48,7 +50,6 @@ namespace MarkdownAIRender.Controls.MarkdownRender
 
         private MarkdownDocument? _parsedDocument;
         private WindowNotificationManager? _notificationManager;
-        private string _copyText = "Copy";
 
         #endregion
 
@@ -86,17 +87,6 @@ namespace MarkdownAIRender.Controls.MarkdownRender
 
                 // 使用增量方式渲染
                 RenderParsedDocumentIncremental();
-            }
-        }
-
-        public string CopyText
-        {
-            get => _copyText;
-            set
-            {
-                if (_copyText == value) return;
-                _copyText = value;
-                OnPropertyChanged();
             }
         }
 
@@ -141,9 +131,7 @@ namespace MarkdownAIRender.Controls.MarkdownRender
             // 初始化通知管理器
             _notificationManager = new WindowNotificationManager(TopLevel.GetTopLevel(this))
             {
-                Position = NotificationPosition.TopRight,
-                MaxItems = 3,
-                Margin = new Thickness(0, 0, 15, 40)
+                Position = NotificationPosition.TopRight, MaxItems = 3, Margin = new Thickness(0, 0, 15, 40)
             };
 
             // 订阅主题变化事件
@@ -233,6 +221,7 @@ namespace MarkdownAIRender.Controls.MarkdownRender
                         _oldBlockControlMap[newBlock] = newControl;
                     }
                 }
+
                 return;
             }
 
@@ -260,6 +249,7 @@ namespace MarkdownAIRender.Controls.MarkdownRender
                         finalChildren.Add(newCtrl);
                         newBlockControlMap[newBlock] = newCtrl;
                     }
+
                     continue;
                 }
 
@@ -270,6 +260,7 @@ namespace MarkdownAIRender.Controls.MarkdownRender
                     {
                         // 可以在这里做 oldCtrl 的清理，Dispose等
                     }
+
                     continue;
                 }
 
@@ -293,6 +284,7 @@ namespace MarkdownAIRender.Controls.MarkdownRender
                         {
                             // 做一些清理
                         }
+
                         var newCtrl = ConvertBlock(newBlock);
                         if (newCtrl != null)
                         {
@@ -339,26 +331,28 @@ namespace MarkdownAIRender.Controls.MarkdownRender
                     return "CODE:" + codeBlock.Info + Environment.NewLine + codeBlock.Lines.ToString();
 
                 case ListBlock listBlock:
-                {
-                    // 遍历子ItemBlock
-                    var textList = new List<string>();
-                    foreach (var subItem in listBlock)
                     {
-                        textList.Add(GetBlockContent(subItem));
+                        // 遍历子ItemBlock
+                        var textList = new List<string>();
+                        foreach (var subItem in listBlock)
+                        {
+                            textList.Add(GetBlockContent(subItem));
+                        }
+
+                        return (listBlock.IsOrdered ? "ORDERLIST:" : "BULLETLIST:") + string.Join("\n", textList);
                     }
-                    return (listBlock.IsOrdered ? "ORDERLIST:" : "BULLETLIST:") + string.Join("\n", textList);
-                }
 
                 case QuoteBlock quoteBlock:
-                {
-                    // 递归收集子Block
-                    var quoteTexts = new List<string>();
-                    foreach (var subBlock in quoteBlock)
                     {
-                        quoteTexts.Add(GetBlockContent(subBlock));
+                        // 递归收集子Block
+                        var quoteTexts = new List<string>();
+                        foreach (var subBlock in quoteBlock)
+                        {
+                            quoteTexts.Add(GetBlockContent(subBlock));
+                        }
+
+                        return "QUOTE:" + string.Join("\n", quoteTexts);
                     }
-                    return "QUOTE:" + string.Join("\n", quoteTexts);
-                }
 
                 case ThematicBreakBlock _:
                     return "THEMATICBREAK";
@@ -398,12 +392,12 @@ namespace MarkdownAIRender.Controls.MarkdownRender
             switch (mdInline)
             {
                 case EmphasisInline emphasisInline:
-                {
-                    // 根据是否**或*拼接特殊标记 + 递归内部
-                    var delim = emphasisInline.DelimiterCount == 2 ? "**" : "*";
-                    var subText = GetInlineContent(emphasisInline);
-                    return delim + subText + delim;
-                }
+                    {
+                        // 根据是否**或*拼接特殊标记 + 递归内部
+                        var delim = emphasisInline.DelimiterCount == 2 ? "**" : "*";
+                        var subText = GetInlineContent(emphasisInline);
+                        return delim + subText + delim;
+                    }
                 case CodeInline codeInline:
                     return "`" + codeInline.Content + "`";
 
@@ -477,13 +471,7 @@ namespace MarkdownAIRender.Controls.MarkdownRender
 
         private Control CreateQuote(QuoteBlock quoteBlock)
         {
-            var border = new Border
-            {
-                BorderBrush = Brushes.Gray,
-                BorderThickness = new Thickness(3, 0, 0, 0),
-                Padding = new Thickness(8, 5, 5, 5),
-                Margin = new Thickness(8, 5, 0, 5)
-            };
+            var border = new Border { Classes = { "MdQuoteBorder" } };
 
             var stackPanel = new StackPanel { Orientation = Orientation.Vertical };
 
@@ -528,8 +516,7 @@ namespace MarkdownAIRender.Controls.MarkdownRender
                         {
                             var span = new SelectableTextBlock
                             {
-                                Inlines = new InlineCollection(),
-                                TextWrapping = TextWrapping.Wrap,
+                                Classes = { "MdP" }, Inlines = new InlineCollection(),
                             };
                             span.Inlines?.Add(inline);
                             container.Children.Add(span);
@@ -556,17 +543,6 @@ namespace MarkdownAIRender.Controls.MarkdownRender
                 {
                     if (inl is Inline inline)
                     {
-                        var fontSize = headingBlock.Level switch
-                        {
-                            1 => 24,
-                            2 => 20,
-                            3 => 18,
-                            4 => 16,
-                            5 => 14,
-                            6 => 12,
-                            _ => 12
-                        };
-
                         if (container.LastOrDefault() is SelectableTextBlock span)
                         {
                             span.Inlines?.Add(inline);
@@ -575,9 +551,7 @@ namespace MarkdownAIRender.Controls.MarkdownRender
                         {
                             span = new SelectableTextBlock
                             {
-                                FontSize = fontSize,
-                                FontWeight = FontWeight.Bold,
-                                TextWrapping = TextWrapping.Wrap,
+                                Classes = { headingBlock.Level <= 6 ? $"MdH{headingBlock.Level}" : "MdHn" },
                                 Inlines = new InlineCollection()
                             };
                             span.Inlines?.Add(inline);
@@ -639,14 +613,7 @@ namespace MarkdownAIRender.Controls.MarkdownRender
                     Margin = new Thickness(0, 2, 10, 0)
                 };
 
-                var copyButton = new Button
-                {
-                    Content = CopyText,
-                    FontSize = 12,
-                    Height = 24,
-                    Padding = new Thickness(3),
-                    Margin = new Thickness(0)
-                };
+                var copyButton = new Button { Classes = { "Copy" } };
 
                 // 根据主题设置按钮颜色
                 if (Application.Current.RequestedThemeVariant == ThemeVariant.Light)
@@ -672,8 +639,8 @@ namespace MarkdownAIRender.Controls.MarkdownRender
                     clipboard.SetTextAsync(fencedCodeBlock.Lines.ToString());
 
                     _notificationManager?.Show(new Notification(
-                        "复制成功",
-                        "代码已复制到剪贴板",
+                        I18nManager.Instance.GetResource(Localization.MarkdownRender.CopyNotificationTitle),
+                        I18nManager.Instance.GetResource(Localization.MarkdownRender.CopyNotificationMessage),
                         NotificationType.Success));
                 };
 
@@ -724,7 +691,8 @@ namespace MarkdownAIRender.Controls.MarkdownRender
                     {
                         Text = prefix,
                         TextWrapping = TextWrapping.Wrap,
-                        FontWeight = FontWeight.Bold
+                        FontWeight = FontWeight.Bold,
+                        VerticalAlignment = VerticalAlignment.Center
                     });
 
                     var subPanel = new StackPanel { Orientation = Orientation.Vertical };
@@ -775,10 +743,10 @@ namespace MarkdownAIRender.Controls.MarkdownRender
                     return new List<object> { CreateCodeInline(codeInline) };
 
                 case LinkInline { IsImage: true } linkImg:
-                {
-                    var img = CreateImageInline(linkImg);
-                    return img != null ? new List<object> { img } : new List<object>();
-                }
+                    {
+                        var img = CreateImageInline(linkImg);
+                        return img != null ? new List<object> { img } : new List<object>();
+                    }
                 case LinkInline linkInline:
                     return new List<object> { CreateHyperlinkInline(linkInline) };
 
@@ -802,6 +770,7 @@ namespace MarkdownAIRender.Controls.MarkdownRender
             {
                 return new ImagesRender { Value = linkInline.Url };
             }
+
             return null;
         }
 
@@ -820,9 +789,7 @@ namespace MarkdownAIRender.Controls.MarkdownRender
                     var span = new Span();
                     var label = new SelectableTextBlock
                     {
-                        Foreground = SolidColorBrush.Parse("#0078d4"),
-                        TextDecorations = TextDecorations.Underline,
-                        TextWrapping = TextWrapping.Wrap,
+                        Classes = { "MdLink" },
                         Text = literalInline.Content.ToString(),
                         Cursor = new Cursor(StandardCursorType.Hand)
                     };
@@ -838,6 +805,7 @@ namespace MarkdownAIRender.Controls.MarkdownRender
                     return span;
                 }
             }
+
             return new LineBreak();
         }
 
