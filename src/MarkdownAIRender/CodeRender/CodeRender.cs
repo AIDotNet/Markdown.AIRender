@@ -1,4 +1,3 @@
-﻿using System;
 using System.Globalization;
 
 using Avalonia;
@@ -10,7 +9,9 @@ using Avalonia.Styling;
 
 using TextMateSharp.Grammars;
 using TextMateSharp.Registry;
+using TextMateSharp.Themes;
 
+using FontStyle = Avalonia.Media.FontStyle;
 // 注意这里，避免跟 Avalonia.Media.FontStyle 冲突
 // 我们将 TextMateSharp 的 FontStyle 取别名
 using TmFontStyle = TextMateSharp.Themes.FontStyle;
@@ -21,26 +22,43 @@ namespace MarkdownAIRender.CodeRender
     {
         // 用于跨行保存解析状态
         private static IStateStack? s_ruleStack;
+        private static readonly Dictionary<(string, ThemeName), (IGrammar, Theme)> GrammarCache = new();
+
+        /// <summary>
+        /// 从缓存中获取或创建 Grammar
+        /// </summary>
+        private static (IGrammar, Theme) GetOrCreateGrammar(string language, ThemeName themeName)
+        {
+            var cacheKey = (language, themeName);
+
+            if (!GrammarCache.TryGetValue(cacheKey, out var grammar))
+            {
+                var options = new RegistryOptions(themeName);
+                var registry = new Registry(options);
+                var theme = registry.GetTheme();
+
+                grammar = (registry.LoadGrammar(options.GetScopeByLanguageId(language)), theme);
+                if (grammar.Item1 == null)
+                {
+                    // 如果找不到对应语言，退化为 "log"
+                    grammar = (registry.LoadGrammar(options.GetScopeByLanguageId("log")), theme);
+                }
+
+                GrammarCache[cacheKey] = grammar;
+            }
+
+            return (grammar.Item1, grammar.Item2);
+        }
 
         public static Control Render(string code, string language, ThemeName themeName)
         {
-            var options = new RegistryOptions(themeName);
-            var registry = new Registry(options);
-            var theme = registry.GetTheme();
-
-            IGrammar grammar = registry.LoadGrammar(
-                // 你也可以改为：options.GetScopeByExtension(language)
-                options.GetScopeByLanguageId(language)
-            );
-
-            if (grammar == null)
-            {
-                // 如果没有对应的 grammar，就简单返回纯文本
-                return new SelectableTextBlock { Text = code,TextWrapping = TextWrapping.Wrap};
-            }
+            var (grammar, theme) = GetOrCreateGrammar(language, themeName);
 
             // 使用 SelectableTextBlock，使得代码可被复制
-            var textBlock = new SelectableTextBlock { TextWrapping = TextWrapping.Wrap };
+            var textBlock = new SelectableTextBlock
+            {
+                Inlines = new InlineCollection(), TextWrapping = TextWrapping.Wrap,
+            };
 
             s_ruleStack = null;
             var lines = code.Split('\n');
@@ -136,7 +154,7 @@ namespace MarkdownAIRender.CodeRender
                     // 设置斜体
                     if (fontStyle == TmFontStyle.Italic)
                     {
-                        run.FontStyle = Avalonia.Media.FontStyle.Italic;
+                        run.FontStyle = FontStyle.Italic;
                     }
 
                     textBlock.Inlines.Add(run);
@@ -146,18 +164,15 @@ namespace MarkdownAIRender.CodeRender
                 textBlock.Inlines.Add(new LineBreak());
             }
 
-            return new ScrollViewer()
-            {
-                Content = textBlock
-            };
+            return new ScrollViewer() { Content = textBlock };
         }
 
         private static Color HexToColor(string hexString)
         {
             if (hexString.StartsWith('#'))
-                hexString = hexString.Substring(1);
+                hexString = hexString[1..];
 
-            byte r = byte.Parse(hexString.Substring(0, 2), NumberStyles.HexNumber);
+            byte r = byte.Parse(hexString[..2], NumberStyles.HexNumber);
             byte g = byte.Parse(hexString.Substring(2, 2), NumberStyles.HexNumber);
             byte b = byte.Parse(hexString.Substring(4, 2), NumberStyles.HexNumber);
 
