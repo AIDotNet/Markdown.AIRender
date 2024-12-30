@@ -17,10 +17,14 @@ public class MarkdownClass : AvaloniaObject
 
     public static List<MarkdownTheme> Themes { get; private set; } = new()
     {
-        new("Ä«ºÚ", "Inkiness"), new("³ÈÐÄ", "OrangeHeart"), new("æ±×Ï", "ColorfulPurple")
+        new("Ä¬ÈÏÖ÷Ìâ", ""),
+        new("³ÈÐÄ", "OrangeHeart"),
+        new("Ä«ºÚ", "Inkiness"),
+        new("æ±×Ï", "ColorfulPurple"),
+        new("¿Æ¼¼À¶", "TechnologyBlue")
     };
 
-    public static string CurrentThemeKey { get; private set; } = "OrangeHeart";
+    public static string CurrentThemeKey { get; private set; } = "";
 
     #endregion
 
@@ -60,25 +64,34 @@ public class MarkdownClass : AvaloniaObject
             return;
         }
 
-        if (!control.Classes.Contains(baseClass))
-        {
-            control.Classes.Add(baseClass);
-        }
-
-        var newUpdateMdClass = $"{baseClass}_{CurrentThemeKey}";
-        if (control.Classes.Contains(newUpdateMdClass))
+        var currentFactThemeKey =
+            string.IsNullOrWhiteSpace(CurrentThemeKey) ? baseClass : $"{baseClass}_{CurrentThemeKey}";
+        if (control.Classes.Contains(currentFactThemeKey))
         {
             return;
         }
 
-        var oldMdClasses = control.Classes.Where(name => name.StartsWith(MarkdownClassPrefix) && name.Contains("_"))
+        var oldMdClasses = control.Classes.Where(name => name.StartsWith(MarkdownClassPrefix))
             .ToList();
         foreach (var oldMdClass in oldMdClasses)
         {
             control.Classes.Remove(oldMdClass);
         }
 
-        control.Classes.Add(newUpdateMdClass);
+        control.Classes.Add(currentFactThemeKey);
+    }
+
+    public static void RemoveControl(Control control)
+    {
+        _boundControls.Remove(control);
+    }
+
+    public static void AddControl(Control control)
+    {
+        var baseClass =
+            control.Classes.FirstOrDefault(item => item.StartsWith(MarkdownClassPrefix) && !item.Contains("_"));
+        _boundControls[control] = baseClass;
+        ChangeTheme(control, baseClass);
     }
 
     #endregion
@@ -89,15 +102,12 @@ public class MarkdownClass : AvaloniaObject
     {
         if (e.OldValue is Control oldControl)
         {
-            _boundControls.Remove(oldControl);
+            RemoveControl(oldControl);
         }
 
         if (e.NewValue is Control newControl)
         {
-            var baseClass =
-                newControl.Classes.FirstOrDefault(item => item.StartsWith(MarkdownClassPrefix) && !item.Contains("_"));
-            _boundControls[newControl] = baseClass;
-            ChangeTheme(newControl, baseClass);
+            AddControl(newControl);
         }
     }
 

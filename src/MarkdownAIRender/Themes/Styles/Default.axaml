@@ -3,13 +3,21 @@
         xmlns:md="https://github.com/AIDotNet/Markdown.AIRender"
         xmlns:i18n="https://codewf.com"
         xmlns:language="clr-namespace:Localization">
+    <!--默认主题-->
 
+    <!--引用边框-->
     <Style Selector="Border.MdQuoteBorder">
-        <Setter Property="md:MarkdownClass.Target" Value="{Binding $self}" />
-        <Setter Property="BorderBrush" Value="Gray" />
+        <Setter Property="BorderBrush" Value="#66000000" />
+        <Setter Property="Background" Value="#13000000" />
         <Setter Property="BorderThickness" Value="3 0 0 0" />
         <Setter Property="Padding" Value="8 5 5 5" />
         <Setter Property="Margin" Value="8 5 0 5" />
+    </Style>
+
+    <!--引用内容-->
+    <Style Selector="SelectableTextBlock.MdQuoteP">
+        <Setter Property="Foreground" Value="#6a737d" />
+        <Setter Property="TextWrapping" Value="Wrap" />
     </Style>
 
     <Style Selector="SelectableTextBlock.MdH1">

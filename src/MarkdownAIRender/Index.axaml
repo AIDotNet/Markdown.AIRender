@@ -10,5 +10,4 @@
         </ResourceDictionary>
     </Styles.Resources>
     <StyleInclude Source="avares://MarkdownAIRender/Themes/Styles/_index.axaml" />
-    <StyleInclude Source="avares://MarkdownAIRender/Themes/MarkdownThemes/_index.axaml" />
 </Styles>

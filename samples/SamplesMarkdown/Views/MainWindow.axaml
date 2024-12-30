@@ -21,7 +21,7 @@
 
     <Grid RowDefinitions="Auto *">
         <StackPanel Orientation="Horizontal" Margin="0 10" VerticalAlignment="Center">
-            <SelectableTextBlock Text="{i18n:I18n {x:Static language:MainWindow.ApplicationThemeLabel}}" VerticalAlignment="Center" Classes="MdH2" />
+            <TextBlock Text="{i18n:I18n {x:Static language:MainWindow.ApplicationThemeLabel}}" VerticalAlignment="Center" />
             <ToggleSwitch OnContent="{i18n:I18n {x:Static language:MainWindow.ThemeDark}}" OffContent="{i18n:I18n {x:Static language:MainWindow.ThemeLight}}" VerticalAlignment="Center"
                           Command="{Binding RaiseChangeThemeHandler}" Margin="5 0 10 0" />
 
