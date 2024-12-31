@@ -503,8 +503,9 @@ namespace MarkdownAIRender.Controls.MarkdownRender
         {
             var container = new SelectableTextBlock()
             {
-                Inlines = new InlineCollection(), TextWrapping = TextWrapping.Wrap,
+                Inlines = new InlineCollection()
             };
+            //container.AddMdClass("MdP");
 
             if (paragraph.Inline != null)
             {
