@@ -17,7 +17,7 @@ public class MarkdownClass : AvaloniaObject
 
     public static List<MarkdownTheme> Themes { get; private set; } = new()
     {
-        new("Ä«ºÚ", "Inkiness"), new("³ÈÐÄ", "OrangeHeart"), new("æ±×Ï", "ColorfulPurple")
+        new("å¢¨é»‘", "Inkiness"), new("æ©™å¿ƒ", "OrangeHeart"), new("å§¹ç´«", "ColorfulPurple")
     };
 
     public static string CurrentThemeKey { get; private set; } = "OrangeHeart";

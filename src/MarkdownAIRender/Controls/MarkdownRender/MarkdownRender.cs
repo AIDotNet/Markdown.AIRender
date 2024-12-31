@@ -16,6 +16,8 @@ using Avalonia.Reactive;
 using Avalonia.Styling;
 using Avalonia.VisualTree;
 
+using AvaloniaXmlTranslator;
+
 using Markdig;
 using Markdig.Syntax;
 using Markdig.Syntax.Inlines;
@@ -40,15 +42,13 @@ namespace MarkdownAIRender.Controls.MarkdownRender
 
         #region Fields
 
-        // 旧的文档结构（用于对比增量渲染）
-        private MarkdownDocument? _oldDocument;
+        // 记录上一次完整的 Markdown 文本
+        private string? _oldMarkdown = string.Empty;
 
-        // 用于存储 Block -> Control 的映射
-        private readonly Dictionary<Block, Control> _oldBlockControlMap = new();
-
+        // 当前解析后的 MarkdownDocument
         private MarkdownDocument? _parsedDocument;
+
         private WindowNotificationManager? _notificationManager;
-        private string _copyText = "Copy";
 
         #endregion
 
@@ -81,22 +81,8 @@ namespace MarkdownAIRender.Controls.MarkdownRender
                 SetValue(ValueProperty, value);
                 OnPropertyChanged();
 
-                // 每次 Value 改变时，重新解析+渲染
-                ParseMarkdown(GetValue(ValueProperty));
-
-                // 使用增量方式渲染
-                RenderParsedDocumentIncremental();
-            }
-        }
-
-        public string CopyText
-        {
-            get => _copyText;
-            set
-            {
-                if (_copyText == value) return;
-                _copyText = value;
-                OnPropertyChanged();
+                // 当 Value 改变时，先尝试安全边界的增量渲染
+                RenderDocumentSafeAppend();
             }
         }
 
@@ -106,16 +92,19 @@ namespace MarkdownAIRender.Controls.MarkdownRender
 
         public MarkdownRender()
         {
-            // 构造函数里如果有初始Value, 可以主动解析
+            // 如果有初始 Value
             if (!string.IsNullOrEmpty(GetValue(ValueProperty)))
             {
-                ParseMarkdown(GetValue(ValueProperty));
+                // 先记录
+                _oldMarkdown = GetValue(ValueProperty);
+                // 初次解析
+                _parsedDocument = Markdown.Parse(_oldMarkdown);
             }
 
             // 监测 ValueProperty 的变化
             ValueProperty.Changed.AddClassHandler<MarkdownRender>((sender, e) =>
             {
-                if (e.NewValue is string newValue)
+                if (e.NewValue is string newValue && e.NewValue != Value)
                 {
                     sender.Value = newValue;
                 }
@@ -132,18 +121,17 @@ namespace MarkdownAIRender.Controls.MarkdownRender
 
             if (_parsedDocument == null && !string.IsNullOrEmpty(GetValue(ValueProperty)))
             {
-                ParseMarkdown(GetValue(ValueProperty));
+                _oldMarkdown = GetValue(ValueProperty);
+                _parsedDocument = Markdown.Parse(_oldMarkdown);
             }
 
-            // 初始渲染（增量）
-            RenderParsedDocumentIncremental();
+            // 初次渲染：可直接做全量渲染或安全增量
+            RenderDocumentSafeAppend();
 
             // 初始化通知管理器
             _notificationManager = new WindowNotificationManager(TopLevel.GetTopLevel(this))
             {
-                Position = NotificationPosition.TopRight,
-                MaxItems = 3,
-                Margin = new Thickness(0, 0, 15, 40)
+                Position = NotificationPosition.TopRight, MaxItems = 3, Margin = new Thickness(0, 0, 15, 40)
             };
 
             // 订阅主题变化事件
@@ -153,7 +141,7 @@ namespace MarkdownAIRender.Controls.MarkdownRender
         protected override void OnApplyTemplate(TemplateAppliedEventArgs e)
         {
             base.OnApplyTemplate(e);
-            // 模板相关操作
+            // 模板相关操作（如果有需要的话）
         }
 
         #endregion
@@ -162,277 +150,159 @@ namespace MarkdownAIRender.Controls.MarkdownRender
 
         private void ThemeChanged(object? sender, EventArgs e)
         {
-            // 主题改变时也做一次增量渲染（或全量渲染）
+            // 主题改变时也做一次刷新
             if (_parsedDocument != null)
             {
-                RenderParsedDocumentIncremental();
+                // 这里简单处理：直接全量刷新
+                RebuildAll(_parsedDocument);
             }
         }
 
         #endregion
 
-        #region Parsing & Incremental Rendering
+        #region Parsing & Rendering (Safe Append)
 
-        private void ParseMarkdown(string? markdown)
+        /// <summary>
+        /// 主入口：尝试从“安全边界”处做增量更新，如果不适用则直接全量渲染。
+        /// </summary>
+        private void RenderDocumentSafeAppend()
         {
-            if (string.IsNullOrEmpty(markdown))
+            string newMarkdown = GetValue(ValueProperty) ?? string.Empty;
+
+            // 先做完整解析，避免上下文丢失
+            var newDoc = Markdown.Parse(newMarkdown);
+
+            // 如果 oldMarkdown 是 newMarkdown 的前缀，而且长度更短 => 说明是“尾部追加”的可能性
+            if (!string.IsNullOrEmpty(_oldMarkdown)
+                && newMarkdown.StartsWith(_oldMarkdown)
+                && newMarkdown.Length > _oldMarkdown.Length)
             {
-                _parsedDocument = null;
-                return;
+                // 试图找一个安全边界
+                int boundaryIndex = FindSafeBoundary(_oldMarkdown);
+                // 如果找不到边界，或在末尾 => 无法安全部分渲染，直接全量
+                if (boundaryIndex < 0 || boundaryIndex >= _oldMarkdown.Length)
+                {
+                    RebuildAll(newDoc);
+                }
+                else
+                {
+                    // 从该边界开始替换 UI
+                    RebuildFromBoundary(boundaryIndex, newDoc);
+                }
+            }
+            else
+            {
+                // 否则就全量渲染
+                RebuildAll(newDoc);
             }
 
-            _parsedDocument = Markdown.Parse(markdown);
+            // 更新当前状态
+            _oldMarkdown = newMarkdown;
+            _parsedDocument = newDoc;
         }
 
         /// <summary>
-        /// 增量渲染：对比新旧文档，只在需要时新建或删除控件
+        /// 找到一个“安全边界”，这里以“最后一次换行符”作为示例。
+        /// 你也可以改成找“最后一段空行”或“Markdig AST 的最近安全块”。
         /// </summary>
-        private void RenderParsedDocumentIncremental()
+        private int FindSafeBoundary(string oldMarkdown)
         {
-            if (_parsedDocument == null)
+            // 简单找最后一次换行符
+            // 如果想要更安全，可以找“```”或空行(\n\n)等
+            int idx = oldMarkdown.LastIndexOf('\n');
+            return idx; // -1表示没找到换行
+        }
+
+        /// <summary>
+        /// 将整个 newDoc 重新生成 UI（全量刷新）。
+        /// </summary>
+        private void RebuildAll(MarkdownDocument newDoc)
+        {
+            if (newDoc == null || newDoc.Count == 0)
             {
                 Content = null;
-                _oldDocument = null;
-                _oldBlockControlMap.Clear();
                 return;
             }
 
-            // 若当前 Content 不是StackPanel，就换成一个新的
+            var container = new StackPanel { Orientation = Orientation.Vertical, Spacing = 6 };
+
+            foreach (var block in newDoc)
+            {
+                var newControl = ConvertBlock(block);
+                if (newControl != null)
+                {
+                    container.Children.Add(newControl);
+                }
+            }
+
+            Content = container;
+        }
+
+        /// <summary>
+        /// 从 boundaryIndex 对应的区域开始，清理旧UI，然后用 newDoc 中对应的块重新生成。
+        /// </summary>
+        private void RebuildFromBoundary(int boundaryIndex, MarkdownDocument newDoc)
+        {
+            // 如果当前 Content 不是 StackPanel，就干脆全量渲染
             if (Content is not StackPanel container)
             {
-                container = new StackPanel
-                {
-                    Orientation = Orientation.Vertical, Spacing = 6
-                };
-                Content = container;
-                _oldDocument = null;
-                _oldBlockControlMap.Clear();
-            }
-
-            // 对比新旧 Document
-            DiffAndUpdateBlocks(container, _oldDocument, _parsedDocument);
-
-            // 更新旧文档引用
-            _oldDocument = _parsedDocument;
-        }
-
-        /// <summary>
-        /// 对比新旧文档的 Blocks，并对 UI 做增量修改
-        /// </summary>
-        private void DiffAndUpdateBlocks(StackPanel container, MarkdownDocument? oldDoc, MarkdownDocument newDoc)
-        {
-            // 如果旧文档为空 => 全量添加
-            if (oldDoc == null || oldDoc.Count == 0)
-            {
-                container.Children.Clear();
-                _oldBlockControlMap.Clear();
-
-                foreach (var newBlock in newDoc)
-                {
-                    var newControl = ConvertBlock(newBlock);
-                    if (newControl != null)
-                    {
-                        container.Children.Add(newControl);
-                        _oldBlockControlMap[newBlock] = newControl;
-                    }
-                }
+                RebuildAll(newDoc);
                 return;
             }
 
-            var oldBlocks = oldDoc.ToList();
-            var newBlocks = newDoc.ToList();
+            // 找到“旧文档”里 boundaryIndex 所在的块下标
+            int blockIndex = FindBlockIndexByOffset(_parsedDocument, boundaryIndex);
 
-            var oldMapBackup = new Dictionary<Block, Control>(_oldBlockControlMap);
-
-            var finalChildren = new List<Control>();
-            var newBlockControlMap = new Dictionary<Block, Control>();
-
-            int maxCount = Math.Max(oldBlocks.Count, newBlocks.Count);
-
-            for (int i = 0; i < maxCount; i++)
+            // 如果找不到有效的 blockIndex，就全量
+            if (blockIndex < 0)
             {
-                var oldBlock = i < oldBlocks.Count ? oldBlocks[i] : null;
-                var newBlock = i < newBlocks.Count ? newBlocks[i] : null;
+                RebuildAll(newDoc);
+                return;
+            }
 
-                // 如果旧Block不存在 => 新增
-                if (oldBlock == null && newBlock != null)
+            // 移除 container 中从 blockIndex 之后的所有子控件
+            for (int i = container.Children.Count - 1; i >= blockIndex; i--)
+            {
+                container.Children.RemoveAt(i);
+            }
+
+            // 然后把 newDoc 中 blockIndex 之后的那些块转换添加进来
+            for (int i = blockIndex; i < newDoc.Count; i++)
+            {
+                var ctrl = ConvertBlock(newDoc[i]);
+                if (ctrl != null)
                 {
-                    var newCtrl = ConvertBlock(newBlock);
-                    if (newCtrl != null)
-                    {
-                        finalChildren.Add(newCtrl);
-                        newBlockControlMap[newBlock] = newCtrl;
-                    }
-                    continue;
+                    container.Children.Add(ctrl);
                 }
+            }
+        }
 
-                // 如果新Block不存在 => 删除
-                if (newBlock == null && oldBlock != null)
+        /// <summary>
+        /// 根据给定的偏移量 boundaryIndex，找出旧文档 _parsedDocument 中对应的块索引。
+        /// 这里需要依赖 Markdig 的 SourceSpan 或 Lines 信息来计算。
+        /// </summary>
+        private int FindBlockIndexByOffset(MarkdownDocument? oldDoc, int boundaryIndex)
+        {
+            if (oldDoc == null) return -1;
+
+            // Markdig 的 Block 有一个 Span 属性 (SourceSpan) 记录文本范围
+            // 这里就简单找第一个“Span.End >= boundaryIndex”的 block
+            for (int i = 0; i < oldDoc.Count; i++)
+            {
+                var block = oldDoc[i];
+                if (block.Span.End >= boundaryIndex)
                 {
-                    if (oldMapBackup.TryGetValue(oldBlock, out var oldCtrl))
-                    {
-                        // 可以在这里做 oldCtrl 的清理，Dispose等
-                    }
-                    continue;
-                }
-
-                // 两边都存在 => 判断是否可复用
-                if (oldBlock != null && newBlock != null)
-                {
-                    bool canReuse =
-                        oldBlock.GetType() == newBlock.GetType()
-                        && GetBlockContent(oldBlock) == GetBlockContent(newBlock);
-
-                    if (canReuse && oldMapBackup.TryGetValue(oldBlock, out var oldCtrl))
-                    {
-                        // 可以复用
-                        finalChildren.Add(oldCtrl);
-                        newBlockControlMap[newBlock] = oldCtrl;
-                    }
-                    else
-                    {
-                        // 无法复用 => 移除旧控件，新建新控件
-                        if (oldMapBackup.TryGetValue(oldBlock, out var oldCtrlToRemove))
-                        {
-                            // 做一些清理
-                        }
-                        var newCtrl = ConvertBlock(newBlock);
-                        if (newCtrl != null)
-                        {
-                            finalChildren.Add(newCtrl);
-                            newBlockControlMap[newBlock] = newCtrl;
-                        }
-                    }
+                    return i;
                 }
             }
 
-            container.Children.Clear();
-            foreach (var c in finalChildren)
-            {
-                container.Children.Add(c);
-            }
-
-            // 替换旧的映射表
-            _oldBlockControlMap.Clear();
-            foreach (var kv in newBlockControlMap)
-            {
-                _oldBlockControlMap[kv.Key] = kv.Value;
-            }
+            // 如果 boundaryIndex 超过了所有 block 的范围，返回 -1
+            return -1;
         }
 
         #endregion
 
-        #region Block Content Extraction (for comparison)
-
-        /// <summary>
-        /// 获取一个 Block 的“完整文本内容”，用来做比较。
-        /// 如果内部还有子Block（如List、Quote），会递归收集。
-        /// </summary>
-        private string GetBlockContent(Block block)
-        {
-            switch (block)
-            {
-                case ParagraphBlock paragraph:
-                    return GetInlineContent(paragraph.Inline);
-
-                case HeadingBlock heading:
-                    return "HEADING:" + heading.Level + ":" + GetInlineContent(heading.Inline);
-
-                case FencedCodeBlock codeBlock:
-                    return "CODE:" + codeBlock.Info + Environment.NewLine + codeBlock.Lines.ToString();
-
-                case ListBlock listBlock:
-                {
-                    // 遍历子ItemBlock
-                    var textList = new List<string>();
-                    foreach (var subItem in listBlock)
-                    {
-                        textList.Add(GetBlockContent(subItem));
-                    }
-                    return (listBlock.IsOrdered ? "ORDERLIST:" : "BULLETLIST:") + string.Join("\n", textList);
-                }
-
-                case QuoteBlock quoteBlock:
-                {
-                    // 递归收集子Block
-                    var quoteTexts = new List<string>();
-                    foreach (var subBlock in quoteBlock)
-                    {
-                        quoteTexts.Add(GetBlockContent(subBlock));
-                    }
-                    return "QUOTE:" + string.Join("\n", quoteTexts);
-                }
-
-                case ThematicBreakBlock _:
-                    return "THEMATICBREAK";
-
-                default:
-                    // 其它类型可以简单返回 block.ToString()
-                    // 或做更深入的处理
-                    return "OTHER:" + (block?.ToString() ?? "");
-            }
-        }
-
-        /// <summary>
-        /// 递归收集 InlineContainer 的文本内容
-        /// </summary>
-        private string GetInlineContent(ContainerInline? container)
-        {
-            if (container == null)
-                return "";
-
-            var textList = new List<string>();
-            var current = container.FirstChild;
-
-            while (current != null)
-            {
-                textList.Add(GetInlineText(current));
-                current = current.NextSibling;
-            }
-
-            return string.Join("", textList);
-        }
-
-        /// <summary>
-        /// 获取单个 Inline 的文本
-        /// </summary>
-        private string GetInlineText(Markdig.Syntax.Inlines.Inline mdInline)
-        {
-            switch (mdInline)
-            {
-                case EmphasisInline emphasisInline:
-                {
-                    // 根据是否**或*拼接特殊标记 + 递归内部
-                    var delim = emphasisInline.DelimiterCount == 2 ? "**" : "*";
-                    var subText = GetInlineContent(emphasisInline);
-                    return delim + subText + delim;
-                }
-                case CodeInline codeInline:
-                    return "`" + codeInline.Content + "`";
-
-                case LinkInline { IsImage: true } linkInline:
-                    return $"![{GetInlineContent(linkInline)}]({linkInline.Url})";
-
-                case LinkInline linkInline:
-                    return $"[{GetInlineContent(linkInline)}]({linkInline.Url})";
-
-                case LineBreakInline _:
-                    return "\n";
-
-                case LiteralInline literalInline:
-                    return literalInline.Content.ToString();
-
-                case HtmlInline htmlInline:
-                    return "<HTML>" + (htmlInline.Tag ?? "") + "</HTML>";
-
-                default:
-                    return mdInline.ToString() ?? "";
-            }
-        }
-
-        #endregion
-
-        #region Core Convert Methods
+        #region Block & Inline Convert (基本与原代码一致)
 
         private Control? ConvertBlock(Block block)
         {
@@ -463,7 +333,7 @@ namespace MarkdownAIRender.Controls.MarkdownRender
 
                 default:
                     // 其它类型（简单处理）
-                    return new SelectableTextBlock()
+                    return new SelectableTextBlock
                     {
                         IsEnabled = true,
                         Classes = { "markdown" },
@@ -475,50 +345,9 @@ namespace MarkdownAIRender.Controls.MarkdownRender
             }
         }
 
-        private Control CreateQuote(QuoteBlock quoteBlock)
-        {
-            var border = new Border
-            {
-                BorderBrush = Brushes.Gray,
-                BorderThickness = new Thickness(3, 0, 0, 0),
-                Padding = new Thickness(8, 5, 5, 5),
-                Margin = new Thickness(8, 5, 0, 5)
-            };
-
-            var stackPanel = new SelectableTextBlock()
-            {
-                TextWrapping = TextWrapping.Wrap,
-                Inlines = new InlineCollection()
-            };
-
-            var headerPanel = new SelectableTextBlock
-            {
-                HorizontalAlignment = HorizontalAlignment.Right,
-                Margin = new Thickness(0, 0, 0, 5),
-            };
-
-            stackPanel.Inlines.Add(headerPanel);
-            border.Child = stackPanel;
-
-            foreach (Block block in quoteBlock)
-            {
-                var control = ConvertBlock(block);
-                if (control != null)
-                {
-                    stackPanel.Inlines.Add(control);
-                }
-            }
-
-            return border;
-        }
-
         private Control CreateParagraph(ParagraphBlock paragraph)
         {
-            var container = new SelectableTextBlock()
-            {
-                Inlines = new InlineCollection(),
-                TextWrapping = TextWrapping.Wrap,
-            };
+            var container = new SelectableTextBlock() { TextWrapping = TextWrapping.Wrap, };
 
             if (paragraph.Inline != null)
             {
@@ -550,17 +379,6 @@ namespace MarkdownAIRender.Controls.MarkdownRender
                 {
                     if (inl is Inline inline)
                     {
-                        var fontSize = headingBlock.Level switch
-                        {
-                            1 => 24,
-                            2 => 20,
-                            3 => 18,
-                            4 => 16,
-                            5 => 14,
-                            6 => 12,
-                            _ => 12
-                        };
-
                         if (container.LastOrDefault() is SelectableTextBlock span)
                         {
                             span.Inlines?.Add(inline);
@@ -569,10 +387,8 @@ namespace MarkdownAIRender.Controls.MarkdownRender
                         {
                             span = new SelectableTextBlock
                             {
-                                FontSize = fontSize,
-                                FontWeight = FontWeight.Bold,
-                                TextWrapping = TextWrapping.Wrap,
-                                Inlines = new InlineCollection()
+                                //Classes = { headingBlock.Level <= 6 ? $"MdH{headingBlock.Level}" : "MdHn" },
+                                TextWrapping = TextWrapping.Wrap, Inlines = new InlineCollection()
                             };
                             span.Inlines?.Add(inline);
                             container.Add(span);
@@ -587,18 +403,17 @@ namespace MarkdownAIRender.Controls.MarkdownRender
 
             var panel = new SelectableTextBlock()
             {
-                Inlines = new InlineCollection(),
-                TextWrapping = TextWrapping.Wrap,
+                TextWrapping = TextWrapping.Wrap, Inlines = new InlineCollection()
             };
             foreach (var item in container)
             {
                 switch (item)
                 {
                     case SelectableTextBlock span:
-                        panel.Inlines?.Add(span);
+                        panel.Inlines.Add(span);
                         break;
                     case Control control:
-                        panel.Inlines?.Add(control);
+                        panel.Inlines.Add(control);
                         break;
                 }
             }
@@ -639,7 +454,7 @@ namespace MarkdownAIRender.Controls.MarkdownRender
 
                 var copyButton = new Button
                 {
-                    Content = CopyText,
+                    Content = "Copy",
                     FontSize = 12,
                     Height = 24,
                     Padding = new Thickness(3),
@@ -670,8 +485,8 @@ namespace MarkdownAIRender.Controls.MarkdownRender
                     clipboard.SetTextAsync(fencedCodeBlock.Lines.ToString());
 
                     _notificationManager?.Show(new Notification(
-                        "复制成功",
-                        "代码已复制到剪贴板",
+                        I18nManager.Instance.GetResource(Localization.MarkdownRender.CopyNotificationTitle),
+                        I18nManager.Instance.GetResource(Localization.MarkdownRender.CopyNotificationMessage),
                         NotificationType.Success));
                 };
 
@@ -706,6 +521,7 @@ namespace MarkdownAIRender.Controls.MarkdownRender
             return border;
         }
 
+
         private Control CreateList(ListBlock listBlock)
         {
             var panel = new StackPanel { Orientation = Orientation.Vertical, Spacing = 4 };
@@ -715,32 +531,72 @@ namespace MarkdownAIRender.Controls.MarkdownRender
             {
                 if (item is ListItemBlock listItemBlock)
                 {
-                    var itemPanel = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 6 };
+                    var itemPanel = new WrapPanel()
+                    {
+                        Orientation = Orientation.Horizontal
+                    };
 
                     var prefix = listBlock.IsOrdered ? $"{orderIndex++}." : "• ";
                     itemPanel.Children.Add(new SelectableTextBlock
                     {
                         Text = prefix,
                         TextWrapping = TextWrapping.Wrap,
-                        FontWeight = FontWeight.Bold
+                        FontWeight = FontWeight.Bold,
+                        VerticalAlignment = VerticalAlignment.Center
                     });
 
-                    var subPanel = new StackPanel { Orientation = Orientation.Vertical };
                     foreach (var subBlock in listItemBlock)
                     {
                         var subControl = ConvertBlock(subBlock);
                         if (subControl != null)
                         {
-                            subPanel.Children.Add(subControl);
+                            itemPanel.Children.Add(subControl);
                         }
+                        // 如果是SelectableTextBlock，则将内容添加到 itemPanel而不是subPanel
+                        // if (subControl is SelectableTextBlock selectableTextBlock)
+                        // {
+                        //     itemPanel.Inlines.Add(selectableTextBlock);
+                        // }
                     }
 
-                    itemPanel.Children.Add(subPanel);
+                    // itemPanel.Inlines.Add(subPanel);
                     panel.Children.Add(itemPanel);
                 }
             }
 
             return panel;
+        }
+
+
+        private Control CreateQuote(QuoteBlock quoteBlock)
+        {
+            var border = new Border
+            {
+                //Classes = { "MdQuoteBorder"}
+            };
+
+            var stackPanel = new StackPanel { Orientation = Orientation.Vertical };
+
+            var headerPanel = new StackPanel
+            {
+                Orientation = Orientation.Horizontal,
+                HorizontalAlignment = HorizontalAlignment.Right,
+                Margin = new Thickness(0, 0, 0, 5),
+            };
+
+            stackPanel.Children.Add(headerPanel);
+            border.Child = stackPanel;
+
+            foreach (Block block in quoteBlock)
+            {
+                var control = ConvertBlock(block);
+                if (control != null)
+                {
+                    stackPanel.Children.Add(control);
+                }
+            }
+
+            return border;
         }
 
         #endregion
@@ -773,10 +629,10 @@ namespace MarkdownAIRender.Controls.MarkdownRender
                     return new List<object> { CreateCodeInline(codeInline) };
 
                 case LinkInline { IsImage: true } linkImg:
-                {
-                    var img = CreateImageInline(linkImg);
-                    return img != null ? new List<object> { img } : new List<object>();
-                }
+                    {
+                        var img = CreateImageInline(linkImg);
+                        return img != null ? new List<object> { img } : new List<object>();
+                    }
                 case LinkInline linkInline:
                     return new List<object> { CreateHyperlinkInline(linkInline) };
 
@@ -790,53 +646,9 @@ namespace MarkdownAIRender.Controls.MarkdownRender
                     return new List<object> { CreateHtmlInline(htmlInline) };
 
                 default:
+                    // 其它情况：简单转成文字
                     return new List<object> { new Run(mdInline.ToString()) };
             }
-        }
-
-        private Control? CreateImageInline(LinkInline linkInline)
-        {
-            if (!string.IsNullOrEmpty(linkInline.Url))
-            {
-                return new ImagesRender { Value = linkInline.Url };
-            }
-            return null;
-        }
-
-        private Inline CreateHtmlInline(HtmlInline htmlInline)
-        {
-            // 简单处理：实际可进一步解析 htmlInline.Tag
-            return new Run();
-        }
-
-        private Inline CreateHyperlinkInline(LinkInline linkInline)
-        {
-            foreach (var inline in linkInline)
-            {
-                if (inline is LiteralInline literalInline)
-                {
-                    var span = new Span();
-                    var label = new SelectableTextBlock
-                    {
-                        Foreground = SolidColorBrush.Parse("#0078d4"),
-                        TextDecorations = TextDecorations.Underline,
-                        TextWrapping = TextWrapping.Wrap,
-                        Text = literalInline.Content.ToString(),
-                        Cursor = new Cursor(StandardCursorType.Hand)
-                    };
-                    label.Classes.Add("link");
-
-                    label.Tapped += (sender, e) =>
-                    {
-                        if (!string.IsNullOrEmpty(linkInline.Url))
-                            UrlHelper.OpenUrl(linkInline.Url);
-                    };
-
-                    span.Inlines.Add(label);
-                    return span;
-                }
-            }
-            return new LineBreak();
         }
 
         private List<object> CreateEmphasisInline(EmphasisInline emphasis)
@@ -901,6 +713,53 @@ namespace MarkdownAIRender.Controls.MarkdownRender
                     Background = SolidColorBrush.Parse("#313131"),
                 };
             }
+        }
+
+        private Control? CreateImageInline(LinkInline linkInline)
+        {
+            if (!string.IsNullOrEmpty(linkInline.Url))
+            {
+                return new ImagesRender { Value = linkInline.Url };
+            }
+
+            return null;
+        }
+
+        private Inline CreateHtmlInline(HtmlInline htmlInline)
+        {
+            // 简单处理：实际可进一步解析 htmlInline.Tag
+            return new Run();
+        }
+
+        private Inline CreateHyperlinkInline(LinkInline linkInline)
+        {
+            foreach (var inline in linkInline)
+            {
+                if (inline is LiteralInline literalInline)
+                {
+                    var span = new Span();
+                    var label = new SelectableTextBlock
+                    {
+                        //Classes = { "MdLink" },
+                        Text = literalInline.Content.ToString(),
+                        TextWrapping = TextWrapping.Wrap,
+                        Cursor = new Cursor(StandardCursorType.Hand)
+                    };
+                    label.Classes.Add("link");
+
+                    label.Tapped += (sender, e) =>
+                    {
+                        if (!string.IsNullOrEmpty(linkInline.Url))
+                            UrlHelper.OpenUrl(linkInline.Url);
+                    };
+
+                    span.Inlines.Add(label);
+                    return span;
+                }
+            }
+
+            // 如果没有 literalInline，就简单换行
+            return new LineBreak();
         }
 
         #endregion
