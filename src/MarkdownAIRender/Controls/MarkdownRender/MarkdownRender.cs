@@ -385,10 +385,23 @@ namespace MarkdownAIRender.Controls.MarkdownRender
                         }
                         else
                         {
+                            var fontSize = headingBlock.Level switch
+                            {
+                                1 => 24,
+                                2 => 20,
+                                3 => 18,
+                                4 => 16,
+                                5 => 14,
+                                6 => 12,
+                                _ => 12
+                            };
+
                             span = new SelectableTextBlock
                             {
-                                //Classes = { headingBlock.Level <= 6 ? $"MdH{headingBlock.Level}" : "MdHn" },
-                                TextWrapping = TextWrapping.Wrap, Inlines = new InlineCollection()
+                                FontSize = fontSize,
+                                // Classes = { headingBlock.Level <= 6 ? $"MdH{headingBlock.Level}" : "MdHn" },
+                                TextWrapping = TextWrapping.Wrap,
+                                Inlines = new InlineCollection()
                             };
                             span.Inlines?.Add(inline);
                             container.Add(span);
@@ -524,42 +537,57 @@ namespace MarkdownAIRender.Controls.MarkdownRender
 
         private Control CreateList(ListBlock listBlock)
         {
-            var panel = new StackPanel { Orientation = Orientation.Vertical, Spacing = 4 };
+            var panel = new StackPanel
+            {
+                Orientation = Orientation.Vertical, HorizontalAlignment = HorizontalAlignment.Left, Spacing = 4
+            };
             int orderIndex = 1; // 有序列表的起始索引
 
             foreach (var item in listBlock)
             {
                 if (item is ListItemBlock listItemBlock)
-                {
-                    var itemPanel = new WrapPanel()
+                {var itemPanel = new Grid()
                     {
-                        Orientation = Orientation.Horizontal
+                        VerticalAlignment = VerticalAlignment.Top,
+                        HorizontalAlignment = HorizontalAlignment.Left,
                     };
 
-                    var prefix = listBlock.IsOrdered ? $"{orderIndex++}." : "• ";
-                    itemPanel.Children.Add(new SelectableTextBlock
-                    {
-                        Text = prefix,
-                        TextWrapping = TextWrapping.Wrap,
-                        FontWeight = FontWeight.Bold,
-                        VerticalAlignment = VerticalAlignment.Center
-                    });
+// Define columns with fixed width or auto-width
+                    itemPanel.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Auto) });
+                    itemPanel.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+// Add more columns as needed...
 
-                    foreach (var subBlock in listItemBlock)
+                    var prefix = listBlock.IsOrdered ? $"{orderIndex++}." : "• ";
+
+                    var prefixBlock = new SelectableTextBlock
                     {
-                        var subControl = ConvertBlock(subBlock);
-                        if (subControl != null)
+                        Text = prefix, 
+                        TextWrapping = TextWrapping.Wrap, 
+                        FontWeight = FontWeight.Bold
+                    };
+
+// Place the prefixBlock in the first column (row 0)
+                    Grid.SetColumn(prefixBlock, 0);
+                    itemPanel.Children.Add(prefixBlock);
+
+                    int columnIndex = 1;  // Start placing other blocks in the next column
+                    foreach (var subControl in listItemBlock.Select(ConvertBlock))
+                    {
+                        if (subControl is SelectableTextBlock textBlock)
                         {
-                            itemPanel.Children.Add(subControl);
+                            // Place each textBlock in the next column
+                            Grid.SetColumn(textBlock, columnIndex);
+                            itemPanel.Children.Add(textBlock);
+                            columnIndex++;
                         }
-                        // 如果是SelectableTextBlock，则将内容添加到 itemPanel而不是subPanel
-                        // if (subControl is SelectableTextBlock selectableTextBlock)
-                        // {
-                        //     itemPanel.Inlines.Add(selectableTextBlock);
-                        // }
+                        else if (subControl != null)
+                        {
+                            // Handle other subControls
+                            panel.Children.Add(subControl);
+                        }
                     }
 
-                    // itemPanel.Inlines.Add(subPanel);
+// Add the itemPanel to the main panel
                     panel.Children.Add(itemPanel);
                 }
             }
