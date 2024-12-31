@@ -40,7 +40,7 @@
                       SelectedItem="{Binding SelectedLanguage}" />
 
         </StackPanel>
-        <ScrollViewer Grid.Row="1">
+        <ScrollViewer Grid.Row="1" Padding="10">
             <md:MarkdownRender Value="{Binding Markdown}" />
         </ScrollViewer>
     </Grid>

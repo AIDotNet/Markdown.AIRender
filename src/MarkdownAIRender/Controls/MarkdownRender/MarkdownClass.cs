@@ -1,15 +1,9 @@
-using Avalonia;
 using Avalonia.Controls;
 
 namespace MarkdownAIRender.Controls.MarkdownRender;
 
-public class MarkdownClass : AvaloniaObject
+public static class MarkdownClass
 {
-    static MarkdownClass()
-    {
-        TargetProperty.Changed.AddClassHandler<AvaloniaObject>(OnTargetPropertyChanged);
-    }
-
     private static readonly Dictionary<Control, string?> _boundControls = new();
     private static readonly string MarkdownClassPrefix = "Md";
 
@@ -25,24 +19,6 @@ public class MarkdownClass : AvaloniaObject
     };
 
     public static string CurrentThemeKey { get; private set; } = "";
-
-    #endregion
-
-
-    #region Attached Properties
-
-    public static readonly AttachedProperty<Control> TargetProperty =
-        AvaloniaProperty.RegisterAttached<MarkdownClass, Control, Control>("Target");
-
-    public static void SetTarget(AvaloniaObject element, Control parameter)
-    {
-        element.SetValue(TargetProperty, parameter);
-    }
-
-    public static object GetTarget(AvaloniaObject element)
-    {
-        return element.GetValue(TargetProperty);
-    }
 
     #endregion
 
@@ -86,29 +62,10 @@ public class MarkdownClass : AvaloniaObject
         _boundControls.Remove(control);
     }
 
-    public static void AddControl(Control control)
+    public static void AddMdClass(this Control control, string className)
     {
-        var baseClass =
-            control.Classes.FirstOrDefault(item => item.StartsWith(MarkdownClassPrefix) && !item.Contains("_"));
-        _boundControls[control] = baseClass;
-        ChangeTheme(control, baseClass);
-    }
-
-    #endregion
-
-    #region Private Methods
-
-    private static void OnTargetPropertyChanged(AvaloniaObject obj, AvaloniaPropertyChangedEventArgs e)
-    {
-        if (e.OldValue is Control oldControl)
-        {
-            RemoveControl(oldControl);
-        }
-
-        if (e.NewValue is Control newControl)
-        {
-            AddControl(newControl);
-        }
+        _boundControls[control] = className;
+        ChangeTheme(control, className);
     }
 
     #endregion

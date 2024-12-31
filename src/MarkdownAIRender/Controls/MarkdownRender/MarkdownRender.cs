@@ -473,11 +473,11 @@ namespace MarkdownAIRender.Controls.MarkdownRender
 
         private Control CreateQuote(QuoteBlock quoteBlock)
         {
-            var border = new Border { Classes = { "MdQuoteBorder" } };
-            MarkdownClass.AddControl(border);
+            var border = new Border();
+            border.AddMdClass("MdQuoteBorder");
 
-            var stackPanel = new SelectableTextBlock() { Classes = { "MdQuoteP" }, Inlines = new InlineCollection() };
-            MarkdownClass.AddControl(stackPanel);
+            var stackPanel = new SelectableTextBlock() { Inlines = new InlineCollection() };
+            stackPanel.AddMdClass("MdQuoteP");
 
             var headerPanel = new SelectableTextBlock
             {

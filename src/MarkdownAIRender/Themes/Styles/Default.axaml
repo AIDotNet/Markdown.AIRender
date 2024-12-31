@@ -3,9 +3,9 @@
         xmlns:md="https://github.com/AIDotNet/Markdown.AIRender"
         xmlns:i18n="https://codewf.com"
         xmlns:language="clr-namespace:Localization">
-    <!--默认主题-->
+    <!--榛樿涓婚-->
 
-    <!--引用边框-->
+    <!--寮曠敤杈规-->
     <Style Selector="Border.MdQuoteBorder">
         <Setter Property="BorderBrush" Value="#66000000" />
         <Setter Property="Background" Value="#13000000" />
@@ -14,42 +14,34 @@
         <Setter Property="Margin" Value="8 5 0 5" />
     </Style>
 
-    <!--引用内容-->
+    <!--寮曠敤鍐呭-->
     <Style Selector="SelectableTextBlock.MdQuoteP">
         <Setter Property="Foreground" Value="#6a737d" />
         <Setter Property="TextWrapping" Value="Wrap" />
     </Style>
 
     <Style Selector="SelectableTextBlock.MdH1">
-        <Setter Property="md:MarkdownClass.Target" Value="{Binding $self}" />
     </Style>
 
     <Style Selector="SelectableTextBlock.MdH2">
-        <Setter Property="md:MarkdownClass.Target" Value="{Binding $self}" />
     </Style>
 
     <Style Selector="SelectableTextBlock.MdH3">
-        <Setter Property="md:MarkdownClass.Target" Value="{Binding $self}" />
     </Style>
 
     <Style Selector="SelectableTextBlock.MdH4">
-        <Setter Property="md:MarkdownClass.Target" Value="{Binding $self}" />
     </Style>
 
     <Style Selector="SelectableTextBlock.MdH5">
-        <Setter Property="md:MarkdownClass.Target" Value="{Binding $self}" />
     </Style>
 
     <Style Selector="SelectableTextBlock.MdH6">
-        <Setter Property="md:MarkdownClass.Target" Value="{Binding $self}" />
     </Style>
 
     <Style Selector="SelectableTextBlock.MdHn">
-        <Setter Property="md:MarkdownClass.Target" Value="{Binding $self}" />
     </Style>
 
     <Style Selector="SelectableTextBlock.MdP">
-        <Setter Property="md:MarkdownClass.Target" Value="{Binding $self}" />
     </Style>
 
     <Style Selector="SelectableTextBlock.MdLink">

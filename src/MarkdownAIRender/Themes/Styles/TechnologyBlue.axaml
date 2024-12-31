@@ -8,18 +8,18 @@
 
     <!--引用边框-->
     <Style Selector="Border.MdQuoteBorder_TechnologyBlue">
-        <Setter Property="BorderBrush" Value="#965485" />
-        <Setter Property="Background" Value="#fbf9fd" />
-        <Setter Property="BorderThickness" Value="3 0 1 0" />
-        <Setter Property="Padding" Value="8 5 5 5" />
-        <Setter Property="Margin" Value="8 5 0 5" />
+        <Setter Property="Background" Value="#fff" />
+        <Setter Property="Margin" Value="0 5" />
+        <Setter Property="Padding" Value="8" />
+        <Setter Property="CornerRadius" Value="0 0 3 3" />
+        <Setter Property="BoxShadow" Value="0 10 15 0 #84A1A8" />
     </Style>
 
     <!--引用内容-->
     <Style Selector="SelectableTextBlock.MdQuoteP_TechnologyBlue">
         <Setter Property="Foreground" Value="#0e88eb" />
-        <Setter Property="Background" Value="#fff"></Setter>
         <Setter Property="TextWrapping" Value="Wrap" />
+        <Setter Property="LineHeight" Value="26"></Setter>
     </Style>
 
     <Style Selector="SelectableTextBlock.MdP_TechnologyBlue">
