@@ -15,9 +15,8 @@
     </Style>
 
     <!--引用内容-->
-    <Style Selector="SelectableTextBlock.MdQuoteP">
-        <Setter Property="Foreground" Value="#6a737d" />
-        <Setter Property="TextWrapping" Value="Wrap" />
+    <Style Selector="StackPanel.MdQuoteStackPanel">
+        <Setter Property="Orientation" Value="Vertical" />
     </Style>
 
     <!--普通段落-->

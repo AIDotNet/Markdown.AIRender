@@ -570,12 +570,11 @@ namespace MarkdownAIRender.Controls.MarkdownRender
 
         private Control CreateQuote(QuoteBlock quoteBlock)
         {
-            var border = new Border
-            {
-                //Classes = { "MdQuoteBorder"}
-            };
+            var border = new Border();
+            border.AddMdClass("MdQuoteBorder");
 
-            var stackPanel = new StackPanel { Orientation = Orientation.Vertical };
+            var stackPanel = new StackPanel();
+            stackPanel.AddMdClass("MdQuoteStackPanel");
 
             var headerPanel = new StackPanel
             {
