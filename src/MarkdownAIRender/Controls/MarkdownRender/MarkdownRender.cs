@@ -468,28 +468,12 @@ namespace MarkdownAIRender.Controls.MarkdownRender
                 var copyButton = new Button
                 {
                     Content = "Copy",
+                    Classes = { "MdCopyButton" },
                     FontSize = 12,
                     Height = 24,
                     Padding = new Thickness(3),
                     Margin = new Thickness(0)
                 };
-
-                // 根据主题设置按钮颜色
-                if (Application.Current.RequestedThemeVariant == ThemeVariant.Light)
-                {
-                    copyButton.Background = SolidColorBrush.Parse("#0078d4");
-                    copyButton.Foreground = SolidColorBrush.Parse("#ffffff");
-                }
-                else if (Application.Current.RequestedThemeVariant == ThemeVariant.Dark)
-                {
-                    copyButton.Background = SolidColorBrush.Parse("#313131");
-                    copyButton.Foreground = SolidColorBrush.Parse("#ffffff");
-                }
-                else
-                {
-                    copyButton.Background = SolidColorBrush.Parse("#313131");
-                    copyButton.Foreground = SolidColorBrush.Parse("#ffffff");
-                }
 
                 copyButton.Click += (sender, e) =>
                 {
@@ -546,31 +530,35 @@ namespace MarkdownAIRender.Controls.MarkdownRender
             foreach (var item in listBlock)
             {
                 if (item is ListItemBlock listItemBlock)
-                {var itemPanel = new Grid()
+                {
+                    var itemPanel = new Grid()
                     {
-                        VerticalAlignment = VerticalAlignment.Top,
-                        HorizontalAlignment = HorizontalAlignment.Left,
+                        VerticalAlignment = VerticalAlignment.Top, HorizontalAlignment = HorizontalAlignment.Left,
                     };
 
 // Define columns with fixed width or auto-width
-                    itemPanel.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Auto) });
-                    itemPanel.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+                    itemPanel.ColumnDefinitions.Add(new ColumnDefinition
+                    {
+                        Width = new GridLength(1, GridUnitType.Auto)
+                    });
+                    itemPanel.ColumnDefinitions.Add(new ColumnDefinition
+                    {
+                        Width = new GridLength(1, GridUnitType.Star)
+                    });
 // Add more columns as needed...
 
                     var prefix = listBlock.IsOrdered ? $"{orderIndex++}." : "• ";
 
                     var prefixBlock = new SelectableTextBlock
                     {
-                        Text = prefix, 
-                        TextWrapping = TextWrapping.Wrap, 
-                        FontWeight = FontWeight.Bold
+                        Text = prefix, TextWrapping = TextWrapping.Wrap, FontWeight = FontWeight.Bold
                     };
 
 // Place the prefixBlock in the first column (row 0)
                     Grid.SetColumn(prefixBlock, 0);
                     itemPanel.Children.Add(prefixBlock);
 
-                    int columnIndex = 1;  // Start placing other blocks in the next column
+                    int columnIndex = 1; // Start placing other blocks in the next column
                     foreach (var subControl in listItemBlock.Select(ConvertBlock))
                     {
                         if (subControl is SelectableTextBlock textBlock)
@@ -598,10 +586,7 @@ namespace MarkdownAIRender.Controls.MarkdownRender
 
         private Control CreateQuote(QuoteBlock quoteBlock)
         {
-            var border = new Border
-            {
-                //Classes = { "MdQuoteBorder"}
-            };
+            var border = new Border { Classes = { "MdQuoteBorder" } };
 
             var stackPanel = new StackPanel { Orientation = Orientation.Vertical };
 
@@ -654,28 +639,28 @@ namespace MarkdownAIRender.Controls.MarkdownRender
                     return CreateEmphasisInline(emphasisInline);
 
                 case CodeInline codeInline:
-                    return new List<object> { CreateCodeInline(codeInline) };
+                    return [CreateCodeInline(codeInline)];
 
                 case LinkInline { IsImage: true } linkImg:
                     {
                         var img = CreateImageInline(linkImg);
-                        return img != null ? new List<object> { img } : new List<object>();
+                        return img != null ? [img] : [];
                     }
                 case LinkInline linkInline:
-                    return new List<object> { CreateHyperlinkInline(linkInline) };
+                    return [CreateHyperlinkInline(linkInline)];
 
                 case LineBreakInline _:
-                    return new List<object> { new LineBreak() };
+                    return [new LineBreak()];
 
                 case LiteralInline literalInline:
-                    return new List<object> { new Run(literalInline.Content.ToString()) };
+                    return [new Run(literalInline.Content.ToString())];
 
                 case HtmlInline htmlInline:
-                    return new List<object> { CreateHtmlInline(htmlInline) };
+                    return [CreateHtmlInline(htmlInline)];
 
                 default:
                     // 其它情况：简单转成文字
-                    return new List<object> { new Run(mdInline.ToString()) };
+                    return [new Run(mdInline.ToString())];
             }
         }
 
@@ -712,35 +697,16 @@ namespace MarkdownAIRender.Controls.MarkdownRender
             return results;
         }
 
-        private Inline CreateCodeInline(CodeInline codeInline)
+        private object CreateCodeInline(CodeInline codeInline)
         {
-            if (Application.Current.RequestedThemeVariant == ThemeVariant.Light)
+            return new Border()
             {
-                return new Run(codeInline.Content)
+                Classes = { "MdCodeBorder" },
+                Child = new SelectableTextBlock()
                 {
-                    FontFamily = new FontFamily("Consolas"),
-                    Foreground = SolidColorBrush.Parse("#000000"),
-                    Background = SolidColorBrush.Parse("#f0f0f0"),
-                };
-            }
-            else if (Application.Current.RequestedThemeVariant == ThemeVariant.Dark)
-            {
-                return new Run(codeInline.Content)
-                {
-                    FontFamily = new FontFamily("Consolas"),
-                    Foreground = SolidColorBrush.Parse("#f0f0f0"),
-                    Background = SolidColorBrush.Parse("#313131"),
-                };
-            }
-            else
-            {
-                return new Run(codeInline.Content)
-                {
-                    FontFamily = new FontFamily("Consolas"),
-                    Foreground = SolidColorBrush.Parse("#f0f0f0"),
-                    Background = SolidColorBrush.Parse("#313131"),
-                };
-            }
+                    Text = codeInline.Content, FontFamily = new FontFamily("Consolas"), Classes = { "MdCode" }
+                }
+            };
         }
 
         private Control? CreateImageInline(LinkInline linkInline)
@@ -768,12 +734,11 @@ namespace MarkdownAIRender.Controls.MarkdownRender
                     var span = new Span();
                     var label = new SelectableTextBlock
                     {
-                        //Classes = { "MdLink" },
+                        Classes = { "MdLink" },
                         Text = literalInline.Content.ToString(),
                         TextWrapping = TextWrapping.Wrap,
                         Cursor = new Cursor(StandardCursorType.Hand)
                     };
-                    label.Classes.Add("link");
 
                     label.Tapped += (sender, e) =>
                     {

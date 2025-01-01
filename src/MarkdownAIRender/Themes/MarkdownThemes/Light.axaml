@@ -52,4 +52,5 @@
       <Setter Property="TextWrapping" Value="Wrap" />
       <Setter Property="Foreground" Value="Green" />
   </Style>
+  
 </Styles>
