@@ -385,24 +385,11 @@ namespace MarkdownAIRender.Controls.MarkdownRender
                         }
                         else
                         {
-                            var fontSize = headingBlock.Level switch
-                            {
-                                1 => 24,
-                                2 => 20,
-                                3 => 18,
-                                4 => 16,
-                                5 => 14,
-                                6 => 12,
-                                _ => 12
-                            };
-
                             span = new SelectableTextBlock
                             {
-                                FontSize = fontSize,
-                                // Classes = { headingBlock.Level <= 6 ? $"MdH{headingBlock.Level}" : "MdHn" },
-                                TextWrapping = TextWrapping.Wrap,
                                 Inlines = new InlineCollection()
                             };
+                            span.AddMdClass(headingBlock.Level <= 6 ? $"MdH{headingBlock.Level}" : "MdHn");
                             span.Inlines?.Add(inline);
                             container.Add(span);
                         }
@@ -586,7 +573,8 @@ namespace MarkdownAIRender.Controls.MarkdownRender
 
         private Control CreateQuote(QuoteBlock quoteBlock)
         {
-            var border = new Border { Classes = { "MdQuoteBorder" } };
+            var border = new Border();
+            border.AddMdClass(MarkdownClassConst.MdQuoteBorder);
 
             var stackPanel = new StackPanel { Orientation = Orientation.Vertical };
 

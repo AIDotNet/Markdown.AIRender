@@ -72,3 +72,8 @@ public static class MarkdownClass
 }
 
 public record MarkdownTheme(string Name, string Key);
+
+public class MarkdownClassConst
+{
+    public const string MdQuoteBorder = nameof(MdQuoteBorder);
+}
