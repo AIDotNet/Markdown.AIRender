@@ -9,5 +9,6 @@
     <MarkdownThemeSelectPlaceholder>请选择一个主题色</MarkdownThemeSelectPlaceholder>
     <ApplicationLanguageLabel>系统语言：</ApplicationLanguageLabel>
     <ApplicationLanguageSelectPlaceholder>请选择语言</ApplicationLanguageSelectPlaceholder>
+    <SampleMarkdownFileLabel>示例Markdown：</SampleMarkdownFileLabel>
   </MainWindow>
 </Localization>

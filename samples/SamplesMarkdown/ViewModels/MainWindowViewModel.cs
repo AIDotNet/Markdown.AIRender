@@ -1,5 +1,8 @@
-﻿using System.Collections.ObjectModel;
+﻿using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -17,18 +20,33 @@ public partial class MainWindowViewModel : ViewModelBase
 {
     public MainWindowViewModel()
     {
+        InitSampleFiles();
         InitLanguage();
         InitMarkdownThemes();
     }
 
     #region Properties
 
-    private string markdown;
+    public List<string> MarkdownFiles { get; private set; }
+
+    private string? _selectedFile;
+
+    public string? SelectedFile
+    {
+        get => _selectedFile;
+        set
+        {
+            SetProperty(ref _selectedFile, value);
+            ReadMarkdown();
+        }
+    }
+
+    private string _markdown;
 
     public string Markdown
     {
-        get => markdown;
-        set => this.SetProperty(ref markdown, value);
+        get => _markdown;
+        set => this.SetProperty(ref _markdown, value);
     }
 
     public ObservableCollection<MarkdownTheme> MarkdownThemes { get; private set; }
@@ -76,6 +94,12 @@ public partial class MainWindowViewModel : ViewModelBase
 
     #region private methods
 
+    private void InitSampleFiles()
+    {
+        MarkdownFiles = Directory.GetFiles("markdowns", "*.md").Select(f=>new FileInfo(f).Name).ToList();
+        SelectedFile = MarkdownFiles.FirstOrDefault();
+    }
+
     private void InitLanguage()
     {
         var languages = I18nManager.Instance.GetLanguages();
@@ -89,6 +113,19 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         MarkdownThemes = new ObservableCollection<MarkdownTheme>(MarkdownClass.Themes);
         SelectedMarkdownTheme = MarkdownClass.Themes.FirstOrDefault(item => item.Key == MarkdownClass.CurrentThemeKey);
+    }
+
+    private void ReadMarkdown()
+    {
+        if (string.IsNullOrWhiteSpace(SelectedFile))
+        {
+            Markdown = "No markdown contents";
+        }
+        else
+        {
+            var filePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "markdowns", SelectedFile);
+            Markdown = File.ReadAllText(filePath);
+        }
     }
 
     private void SetLanguage()
