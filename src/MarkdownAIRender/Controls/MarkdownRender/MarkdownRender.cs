@@ -9,6 +9,7 @@ using Avalonia.Controls;
 using Avalonia.Controls.Documents;
 using Avalonia.Controls.Notifications;
 using Avalonia.Controls.Primitives;
+using Avalonia.Data;
 using Avalonia.Input;
 using Avalonia.Layout;
 using Avalonia.Media;
@@ -104,7 +105,7 @@ namespace MarkdownAIRender.Controls.MarkdownRender
             // 监测 ValueProperty 的变化
             ValueProperty.Changed.AddClassHandler<MarkdownRender>((sender, e) =>
             {
-                if (e.NewValue is string newValue && e.NewValue != Value)
+                if (e.NewValue is string newValue)// && e.NewValue != Value) // TODO判断有问题，e.NewValue 和 Value恒等于
                 {
                     sender.Value = newValue;
                 }
@@ -385,13 +386,17 @@ namespace MarkdownAIRender.Controls.MarkdownRender
                         }
                         else
                         {
-                            span = new SelectableTextBlock
-                            {
-                                Inlines = new InlineCollection()
-                            };
-                            span.AddMdClass(headingBlock.Level <= 6 ? $"MdH{headingBlock.Level}" : "MdHn");
+                            var mdClassName = headingBlock.Level <= 6 ? $"MdH{headingBlock.Level}" : "MdHn";
+
+                            var border = new Border();
+                            border.AddMdClass(mdClassName);
+
+                            span = new SelectableTextBlock { Inlines = new InlineCollection() };
+                            span.AddMdClass(mdClassName);
                             span.Inlines?.Add(inline);
-                            container.Add(span);
+
+                            border.Child = span;
+                            container.Add(border);
                         }
                     }
                     else if (inl is Control ctrl)

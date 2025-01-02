@@ -33,13 +33,12 @@
     <Style Selector="SelectableTextBlock.MdH1_TechnologyBlue">
         <Setter Property="FontSize" Value="24" />
         <Setter Property="FontWeight" Value="Bold" />
-        <Setter Property="TextWrapping" Value="Wrap" />
-        <Setter Property="Foreground" Value="#773098" />
-        <Setter Property="Padding" Value="0" />
-        <Setter Property="LineHeight" Value="26" />
         <Setter Property="Margin" Value="0 5" />
     </Style>
 
+    <Style Selector="Border.MdH2_Inkiness">
+
+    </Style>
     <Style Selector="SelectableTextBlock.MdH2_TechnologyBlue">
         <Setter Property="FontSize" Value="20" />
         <Setter Property="FontWeight" Value="Bold" />

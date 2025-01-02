@@ -21,6 +21,7 @@
         <Setter Property="TextWrapping" Value="Wrap" />
     </Style>
 
+    <!--  普通段落  -->
     <Style Selector="SelectableTextBlock.MdP_ColorfulPurple">
         <Setter Property="TextWrapping" Value="Wrap" />
         <Setter Property="Foreground" Value="#3e3e3e" />
@@ -29,16 +30,17 @@
         <Setter Property="Margin" Value="0 5" />
     </Style>
 
+    <!--  标题一  -->
     <Style Selector="SelectableTextBlock.MdH1_ColorfulPurple">
         <Setter Property="FontSize" Value="24" />
         <Setter Property="FontWeight" Value="Bold" />
-        <Setter Property="TextWrapping" Value="Wrap" />
-        <Setter Property="Foreground" Value="#773098" />
-        <Setter Property="Padding" Value="0" />
-        <Setter Property="LineHeight" Value="26" />
         <Setter Property="Margin" Value="0 5" />
     </Style>
 
+    <!--  标题二  -->
+    <Style Selector="Border.MdH2_ColorfulPurple">
+
+    </Style>
     <Style Selector="SelectableTextBlock.MdH2_ColorfulPurple">
         <Setter Property="FontSize" Value="20" />
         <Setter Property="FontWeight" Value="Bold" />
@@ -50,6 +52,7 @@
         <Setter Property="LineHeight" Value="26" />
     </Style>
 
+    <!--  标题三  -->
     <Style Selector="SelectableTextBlock.MdH3_ColorfulPurple">
         <Setter Property="FontSize" Value="18" />
         <Setter Property="FontWeight" Value="Bold" />
@@ -59,6 +62,7 @@
         <Setter Property="Margin" Value="0 5" />
     </Style>
 
+    <!--  标题四  -->
     <Style Selector="SelectableTextBlock.MdH4_ColorfulPurple">
         <Setter Property="FontSize" Value="16" />
         <Setter Property="FontWeight" Value="Bold" />
@@ -68,6 +72,7 @@
         <Setter Property="Margin" Value="0 5" />
     </Style>
 
+    <!--  标题五  -->
     <Style Selector="SelectableTextBlock.MdH5_ColorfulPurple">
         <Setter Property="FontSize" Value="14" />
         <Setter Property="FontWeight" Value="Bold" />
@@ -77,6 +82,7 @@
         <Setter Property="Margin" Value="0 5" />
     </Style>
 
+    <!--  标题六  -->
     <Style Selector="SelectableTextBlock.MdH6_ColorfulPurple">
         <Setter Property="FontSize" Value="12" />
         <Setter Property="FontWeight" Value="Bold" />
@@ -86,6 +92,7 @@
         <Setter Property="Margin" Value="0 5" />
     </Style>
 
+    <!--  标题N  -->
     <Style Selector="SelectableTextBlock.MdHn_ColorfulPurple">
         <Setter Property="FontSize" Value="12" />
         <Setter Property="FontWeight" Value="Bold" />
