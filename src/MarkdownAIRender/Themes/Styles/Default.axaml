@@ -75,11 +75,6 @@
         <Setter Property="Margin" Value="8 5 0 5" />
     </Style>
 
-    <!--  引用内容  -->
-    <Style Selector="StackPanel.MdQuoteStackPanel">
-        <Setter Property="Orientation" Value="Vertical" />
-    </Style>
-
     <!--  普通段落  -->
     <Style Selector="SelectableTextBlock.MdP">
         <Setter Property="FontSize" Value="16" />

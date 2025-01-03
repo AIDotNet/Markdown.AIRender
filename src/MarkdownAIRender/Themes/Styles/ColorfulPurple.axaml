@@ -15,12 +15,6 @@
         <Setter Property="Margin" Value="8 5 0 5" />
     </Style>
 
-    <!--引用内容-->
-    <Style Selector="SelectableTextBlock.MdQuoteP_ColorfulPurple">
-        <Setter Property="Foreground" Value="#616161" />
-        <Setter Property="TextWrapping" Value="Wrap" />
-    </Style>
-
     <!--  普通段落  -->
     <Style Selector="SelectableTextBlock.MdP_ColorfulPurple">
         <Setter Property="TextWrapping" Value="Wrap" />
@@ -33,20 +27,22 @@
     <!--  标题一  -->
     <Style Selector="SelectableTextBlock.MdH1_ColorfulPurple">
         <Setter Property="FontSize" Value="24" />
+        <Setter Property="Foreground" Value="#773098" />
         <Setter Property="FontWeight" Value="Bold" />
         <Setter Property="Margin" Value="0 5" />
     </Style>
 
     <!--  标题二  -->
     <Style Selector="Border.MdH2_ColorfulPurple">
-
+        <Setter Property="BorderThickness" Value="0 0 0 2" />
+        <Setter Property="BorderBrush" Value="#773098" />
+        <Setter Property="HorizontalAlignment" Value="Stretch" />
     </Style>
     <Style Selector="SelectableTextBlock.MdH2_ColorfulPurple">
         <Setter Property="FontSize" Value="20" />
         <Setter Property="FontWeight" Value="Bold" />
         <Setter Property="TextWrapping" Value="Wrap" />
-        <Setter Property="Background" Value="#EF7060" />
-        <Setter Property="Foreground" Value="#ffffff" />
+        <Setter Property="Foreground" Value="#773098" />
         <Setter Property="Padding" Value="3 10 1 1" />
         <Setter Property="Margin" Value="0 0 3 0" />
         <Setter Property="LineHeight" Value="26" />
@@ -55,9 +51,9 @@
     <!--  标题三  -->
     <Style Selector="SelectableTextBlock.MdH3_ColorfulPurple">
         <Setter Property="FontSize" Value="18" />
+        <Setter Property="Foreground" Value="#773098" />
         <Setter Property="FontWeight" Value="Bold" />
         <Setter Property="TextWrapping" Value="Wrap" />
-        <Setter Property="Foreground" Value="#3e3e3e" />
         <Setter Property="LineHeight" Value="26" />
         <Setter Property="Margin" Value="0 5" />
     </Style>

@@ -14,12 +14,6 @@
         <Setter Property="Margin" Value="8 5 0 5" />
     </Style>
 
-    <!--引用内容-->
-    <Style Selector="SelectableTextBlock.MdQuoteP_Inkiness">
-        <Setter Property="Foreground" Value="#6a737d" />
-        <Setter Property="TextWrapping" Value="Wrap" />
-    </Style>
-
     <!--  普通段落  -->
     <Style Selector="SelectableTextBlock.MdP_Inkiness">
         <Setter Property="TextWrapping" Value="Wrap" />
