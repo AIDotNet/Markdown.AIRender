@@ -42,7 +42,6 @@ public partial class MainWindowViewModel : ViewModelBase
         {
             this.SetProperty(ref _selectedMarkdownTheme, value);
             MarkdownClass.ChangeTheme(_selectedMarkdownTheme.Key);
-            ;
         }
     }
 
