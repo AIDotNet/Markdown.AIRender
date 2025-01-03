@@ -7,5 +7,9 @@
   </Design.PreviewWith>
 
   <!-- Add Styles Here -->
-  <StyleInclude Source="MarkdownRender.axaml" />
+  <StyleInclude Source="Default.axaml" />
+  <StyleInclude Source="OrangeHeart.axaml" />
+  <StyleInclude Source="Inkiness.axaml" />
+  <StyleInclude Source="ColorfulPurple.axaml" />
+  <StyleInclude Source="TechnologyBlue.axaml" />
 </Styles>

@@ -8,5 +8,6 @@
     <MarkdownThemeSelectPlaceholder>Please select a theme color.</MarkdownThemeSelectPlaceholder>
     <ApplicationLanguageLabel>System Language:</ApplicationLanguageLabel>
     <ApplicationLanguageSelectPlaceholder>Please select a language.</ApplicationLanguageSelectPlaceholder>
+    <SampleMarkdownFileLabel>Example Markdown:</SampleMarkdownFileLabel>
   </MainWindow>
 </Localization>

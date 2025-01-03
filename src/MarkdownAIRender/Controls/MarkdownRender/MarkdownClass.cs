@@ -1,15 +1,9 @@
-using Avalonia;
 using Avalonia.Controls;
 
 namespace MarkdownAIRender.Controls.MarkdownRender;
 
-public class MarkdownClass : AvaloniaObject
+public static class MarkdownClass
 {
-    static MarkdownClass()
-    {
-        TargetProperty.Changed.AddClassHandler<AvaloniaObject>(OnTargetPropertyChanged);
-    }
-
     private static readonly Dictionary<Control, string?> _boundControls = new();
     private static readonly string MarkdownClassPrefix = "Md";
 
@@ -17,28 +11,14 @@ public class MarkdownClass : AvaloniaObject
 
     public static List<MarkdownTheme> Themes { get; private set; } = new()
     {
-        new("澧ㄩ粦", "Inkiness"), new("姗欏績", "OrangeHeart"), new("濮圭传", "ColorfulPurple")
+        new("默认主题", ""),
+        new("橙心", "OrangeHeart"),
+        new("墨黑", "Inkiness"),
+        new("姹紫", "ColorfulPurple"),
+        new("科技蓝", "TechnologyBlue")
     };
 
-    public static string CurrentThemeKey { get; private set; } = "OrangeHeart";
-
-    #endregion
-
-
-    #region Attached Properties
-
-    public static readonly AttachedProperty<Control> TargetProperty =
-        AvaloniaProperty.RegisterAttached<MarkdownClass, Control, Control>("Target");
-
-    public static void SetTarget(AvaloniaObject element, Control parameter)
-    {
-        element.SetValue(TargetProperty, parameter);
-    }
-
-    public static object GetTarget(AvaloniaObject element)
-    {
-        return element.GetValue(TargetProperty);
-    }
+    public static string CurrentThemeKey { get; private set; } = "";
 
     #endregion
 
@@ -60,48 +40,40 @@ public class MarkdownClass : AvaloniaObject
             return;
         }
 
-        if (!control.Classes.Contains(baseClass))
-        {
-            control.Classes.Add(baseClass);
-        }
-
-        var newUpdateMdClass = $"{baseClass}_{CurrentThemeKey}";
-        if (control.Classes.Contains(newUpdateMdClass))
+        var currentFactThemeKey =
+            string.IsNullOrWhiteSpace(CurrentThemeKey) ? baseClass : $"{baseClass}_{CurrentThemeKey}";
+        if (control.Classes.Contains(currentFactThemeKey))
         {
             return;
         }
 
-        var oldMdClasses = control.Classes.Where(name => name.StartsWith(MarkdownClassPrefix) && name.Contains("_"))
+        var oldMdClasses = control.Classes.Where(name => name.StartsWith(MarkdownClassPrefix))
             .ToList();
         foreach (var oldMdClass in oldMdClasses)
         {
             control.Classes.Remove(oldMdClass);
         }
 
-        control.Classes.Add(newUpdateMdClass);
+        control.Classes.Add(currentFactThemeKey);
     }
 
-    #endregion
-
-    #region Private Methods
-
-    private static void OnTargetPropertyChanged(AvaloniaObject obj, AvaloniaPropertyChangedEventArgs e)
+    public static void RemoveControl(Control control)
     {
-        if (e.OldValue is Control oldControl)
-        {
-            _boundControls.Remove(oldControl);
-        }
+        _boundControls.Remove(control);
+    }
 
-        if (e.NewValue is Control newControl)
-        {
-            var baseClass =
-                newControl.Classes.FirstOrDefault(item => item.StartsWith(MarkdownClassPrefix) && !item.Contains("_"));
-            _boundControls[newControl] = baseClass;
-            ChangeTheme(newControl, baseClass);
-        }
+    public static void AddMdClass(this Control control, string className)
+    {
+        _boundControls[control] = className;
+        ChangeTheme(control, className);
     }
 
     #endregion
 }
 
 public record MarkdownTheme(string Name, string Key);
+
+public class MarkdownClassConst
+{
+    public const string MdQuoteBorder = nameof(MdQuoteBorder);
+}

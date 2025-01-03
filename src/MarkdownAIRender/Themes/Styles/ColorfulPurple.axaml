@@ -4,42 +4,62 @@
         xmlns:i18n="https://codewf.com"
         xmlns:language="clr-namespace:Localization">
 
-    <Style Selector="Border.MdQuoteBorder_OrangeHeart">
-        <Setter Property="BorderBrush" Value="#ef7060" />
-        <Setter Property="Background" Value="#fff9f9" />
-        <Setter Property="BorderThickness" Value="3 0 0 0" />
+    <!--姹紫主题-->
+
+    <!--引用边框-->
+    <Style Selector="Border.MdQuoteBorder_ColorfulPurple">
+        <Setter Property="BorderBrush" Value="#965485" />
+        <Setter Property="Background" Value="#fbf9fd" />
+        <Setter Property="BorderThickness" Value="3 0 1 0" />
         <Setter Property="Padding" Value="8 5 5 5" />
         <Setter Property="Margin" Value="8 5 0 5" />
     </Style>
 
-    <Style Selector="SelectableTextBlock.MdP_OrangeHeart">
+    <!--  普通段落  -->
+    <Style Selector="SelectableTextBlock.MdP_ColorfulPurple">
         <Setter Property="TextWrapping" Value="Wrap" />
+        <Setter Property="Foreground" Value="#3e3e3e" />
         <Setter Property="FontSize" Value="16" />
         <Setter Property="LineHeight" Value="26" />
         <Setter Property="Margin" Value="0 5" />
     </Style>
 
-    <Style Selector="SelectableTextBlock.MdH2_OrangeHeart">
+    <!--  标题一  -->
+    <Style Selector="SelectableTextBlock.MdH1_ColorfulPurple">
+        <Setter Property="FontSize" Value="24" />
+        <Setter Property="Foreground" Value="#773098" />
+        <Setter Property="FontWeight" Value="Bold" />
+        <Setter Property="Margin" Value="0 5" />
+    </Style>
+
+    <!--  标题二  -->
+    <Style Selector="Border.MdH2_ColorfulPurple">
+        <Setter Property="BorderThickness" Value="0 0 0 2" />
+        <Setter Property="BorderBrush" Value="#773098" />
+        <Setter Property="HorizontalAlignment" Value="Stretch" />
+    </Style>
+    <Style Selector="SelectableTextBlock.MdH2_ColorfulPurple">
         <Setter Property="FontSize" Value="20" />
         <Setter Property="FontWeight" Value="Bold" />
         <Setter Property="TextWrapping" Value="Wrap" />
-        <Setter Property="Background" Value="#EF7060" />
-        <Setter Property="Foreground" Value="#ffffff" />
-        <Setter Property="LineHeight" Value="26" />
-        <Setter Property="Padding" Value="10" />
+        <Setter Property="Foreground" Value="#773098" />
+        <Setter Property="Padding" Value="3 10 1 1" />
         <Setter Property="Margin" Value="0 0 3 0" />
+        <Setter Property="LineHeight" Value="26" />
     </Style>
 
-    <Style Selector="SelectableTextBlock.MdH3_OrangeHeart">
+    <!--  标题三  -->
+    <Style Selector="SelectableTextBlock.MdH3_ColorfulPurple">
         <Setter Property="FontSize" Value="18" />
+        <Setter Property="Foreground" Value="#773098" />
         <Setter Property="FontWeight" Value="Bold" />
         <Setter Property="TextWrapping" Value="Wrap" />
-        <Setter Property="Foreground" Value="#3e3e3e" />
         <Setter Property="LineHeight" Value="26" />
         <Setter Property="Margin" Value="0 5" />
     </Style>
 
-    <Style Selector="SelectableTextBlock.MdH4_OrangeHeart">
+    <!--  标题四  -->
+    <Style Selector="SelectableTextBlock.MdH4_ColorfulPurple">
         <Setter Property="FontSize" Value="16" />
         <Setter Property="FontWeight" Value="Bold" />
         <Setter Property="TextWrapping" Value="Wrap" />
@@ -48,7 +68,8 @@
         <Setter Property="Margin" Value="0 5" />
     </Style>
 
-    <Style Selector="SelectableTextBlock.MdH5_OrangeHeart">
+    <!--  标题五  -->
+    <Style Selector="SelectableTextBlock.MdH5_ColorfulPurple">
         <Setter Property="FontSize" Value="14" />
         <Setter Property="FontWeight" Value="Bold" />
         <Setter Property="TextWrapping" Value="Wrap" />
@@ -57,7 +78,8 @@
         <Setter Property="Margin" Value="0 5" />
     </Style>
 
-    <Style Selector="SelectableTextBlock.MdH6_OrangeHeart">
+    <!--  标题六  -->
+    <Style Selector="SelectableTextBlock.MdH6_ColorfulPurple">
         <Setter Property="FontSize" Value="12" />
         <Setter Property="FontWeight" Value="Bold" />
         <Setter Property="TextWrapping" Value="Wrap" />
@@ -66,27 +88,13 @@
         <Setter Property="Margin" Value="0 5" />
     </Style>
 
-    <Style Selector="SelectableTextBlock.MdHn_OrangeHeart">
+    <!--  标题N  -->
+    <Style Selector="SelectableTextBlock.MdHn_ColorfulPurple">
         <Setter Property="FontSize" Value="12" />
         <Setter Property="FontWeight" Value="Bold" />
         <Setter Property="TextWrapping" Value="Wrap" />
         <Setter Property="Foreground" Value="#3e3e3e" />
         <Setter Property="LineHeight" Value="26" />
         <Setter Property="Margin" Value="0 5" />
-    </Style>
-
-    <Style Selector="SelectableTextBlock.MdH1_OrangeHeart">
-        <Setter Property="FontSize" Value="24" />
-        <Setter Property="FontWeight" Value="Bold" />
-        <Setter Property="TextWrapping" Value="Wrap" />
-        <Setter Property="Foreground" Value="#3e3e3e" />
-        <Setter Property="LineHeight" Value="26" />
-        <Setter Property="Margin" Value="0 5" />
-    </Style>
-
-    <Style Selector="SelectableTextBlock.MdLink_OrangeHeart">
-        <Setter Property="Foreground" Value="#ef7060" />
-        <Setter Property="FontSize" Value="16" />
-        <Setter Property="TextDecorations" Value="Underline" />
     </Style>
 </Styles>
