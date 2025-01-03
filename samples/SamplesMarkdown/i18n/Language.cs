@@ -16,5 +16,6 @@ namespace Localization
         public static readonly string MarkdownThemeSelectPlaceholder = "Localization.MainWindow.MarkdownThemeSelectPlaceholder";
         public static readonly string ApplicationLanguageLabel = "Localization.MainWindow.ApplicationLanguageLabel";
         public static readonly string ApplicationLanguageSelectPlaceholder = "Localization.MainWindow.ApplicationLanguageSelectPlaceholder";
+        public static readonly string SampleMarkdownFileLabel = "Localization.MainWindow.SampleMarkdownFileLabel";
     }
 }

@@ -1,0 +1,217 @@
+<Styles
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:i18n="https://codewf.com"
+    xmlns:language="clr-namespace:Localization"
+    xmlns:md="https://github.com/AIDotNet/Markdown.AIRender">
+    <!--  默认主题  -->
+
+    <Styles.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.ThemeDictionaries>
+                <ResourceDictionary x:Key="Dark">
+                    <Color x:Key="Grey9">#f9f9f9</Color>
+                    <Color x:Key="Grey8">#e6e8ea</Color>
+                    <Color x:Key="Grey7">#C6CaCd</Color>
+                    <Color x:Key="Grey6">#A7ABB0</Color>
+                    <Color x:Key="Grey5">#888D92</Color>
+                    <Color x:Key="Grey4">#6B7075</Color>
+                    <Color x:Key="Grey3">#555B60</Color>
+                    <Color x:Key="Grey2">#41464C</Color>
+                    <Color x:Key="Grey1">#2E3238</Color>
+                    <Color x:Key="Grey0">#1C1F23</Color>
+
+                    <Color x:Key="Blue9">#053170</Color>
+                    <Color x:Key="Blue8">#0A4694</Color>
+                    <Color x:Key="Blue7">#135CB8</Color>
+                    <Color x:Key="Blue6">#1D75DB</Color>
+                    <Color x:Key="Blue5">#2990FF</Color>
+                    <Color x:Key="Blue4">#54A9FF</Color>
+                    <Color x:Key="Blue3">#7FC1FF</Color>
+                    <Color x:Key="Blue2">#A9D7FF</Color>
+                    <Color x:Key="Blue1">#D4ECFF</Color>
+                    <Color x:Key="Blue0">#EFF8FF</Color>
+
+                    <Color x:Key="Code">
+                        #313131
+                    </Color>
+                </ResourceDictionary>
+                <ResourceDictionary x:Key="Light">
+                    <Color x:Key="Grey9">#1c1f23</Color>
+                    <Color x:Key="Grey8">#2E3238</Color>
+                    <Color x:Key="Grey7">#41464C</Color>
+                    <Color x:Key="Grey6">#555B60</Color>
+                    <Color x:Key="Grey5">#6B7075</Color>
+                    <Color x:Key="Grey4">#888D92</Color>
+                    <Color x:Key="Grey3">#A7ABB0</Color>
+                    <Color x:Key="Grey2">#C6CaCd</Color>
+                    <Color x:Key="Grey1">#e6e8ea</Color>
+                    <Color x:Key="Grey0">#f9f9f9</Color>
+
+                    <Color x:Key="Blue9">#EFF8FF</Color>
+                    <Color x:Key="Blue8">#D4ECFF</Color>
+                    <Color x:Key="Blue7">#A9D7FF</Color>
+                    <Color x:Key="Blue6">#7FC1FF</Color>
+                    <Color x:Key="Blue5">#54A9FF</Color>
+                    <Color x:Key="Blue4">#2990FF</Color>
+                    <Color x:Key="Blue3">#1D75DB</Color>
+                    <Color x:Key="Blue2">#135CB8</Color>
+                    <Color x:Key="Blue1">#0A4694</Color>
+                    <Color x:Key="Blue0">#053170</Color>
+
+                    <Color x:Key="Code">
+                        #F0F0F0
+                    </Color>
+                </ResourceDictionary>
+            </ResourceDictionary.ThemeDictionaries>
+        </ResourceDictionary>
+    </Styles.Resources>
+
+    <!--  引用边框  -->
+    <Style Selector="Border.MdQuoteBorder">
+        <Setter Property="BorderBrush" Value="{DynamicResource Grey9}" />
+        <Setter Property="BorderThickness" Value="3 0 0 0" />
+        <Setter Property="Padding" Value="8 5 5 5" />
+        <Setter Property="Margin" Value="8 5 0 5" />
+    </Style>
+
+    <!--  普通段落  -->
+    <Style Selector="SelectableTextBlock.MdP">
+        <Setter Property="FontSize" Value="16" />
+        <Setter Property="Padding" Value="0 8" />
+        <Setter Property="Margin" Value="0" />
+        <Setter Property="LineHeight" Value="26" />
+        <Setter Property="Foreground" Value="Black" />
+        <Setter Property="TextWrapping" Value="Wrap" />
+    </Style>
+
+    <!--  标题一  -->
+    <Style Selector="SelectableTextBlock.MdH1">
+        <Setter Property="FontSize" Value="24" />
+        <Setter Property="FontWeight" Value="Bold" />
+        <Setter Property="Margin" Value="0 5" />
+    </Style>
+
+    <!--  标题二  -->
+    <Style Selector="Border.MdH2">
+
+    </Style>
+    <Style Selector="SelectableTextBlock.MdH2">
+        <Setter Property="FontSize" Value="22" />
+        <Setter Property="FontWeight" Value="Bold" />
+        <Setter Property="Margin" Value="0 5" />
+    </Style>
+
+    <!--  标题三  -->
+    <Style Selector="SelectableTextBlock.MdH3">
+        <Setter Property="FontSize" Value="20" />
+        <Setter Property="FontWeight" Value="Bold" />
+        <Setter Property="Margin" Value="0 5" />
+    </Style>
+
+    <!--  标题四  -->
+    <Style Selector="SelectableTextBlock.MdH4">
+        <Setter Property="FontSize" Value="18" />
+        <Setter Property="FontWeight" Value="Bold" />
+        <Setter Property="Margin" Value="0 5" />
+    </Style>
+
+    <!--  标题五  -->
+    <Style Selector="SelectableTextBlock.MdH5">
+        <Setter Property="FontSize" Value="16" />
+        <Setter Property="FontWeight" Value="Bold" />
+        <Setter Property="Margin" Value="0 5" />
+    </Style>
+
+    <!--  标题六  -->
+    <Style Selector="SelectableTextBlock.MdH6">
+        <Setter Property="FontSize" Value="16" />
+        <Setter Property="FontWeight" Value="Bold" />
+        <Setter Property="Margin" Value="0 5" />
+    </Style>
+
+    <!--  标题N  -->
+    <Style Selector="SelectableTextBlock.MdHn">
+        <Setter Property="FontSize" Value="16" />
+        <Setter Property="FontWeight" Value="Bold" />
+        <Setter Property="Margin" Value="0 8" />
+        <Setter Property="LineHeight" Value="26" />
+    </Style>
+
+    <Style Selector="SelectableTextBlock.MdLink">
+        <Setter Property="TextWrapping" Value="Wrap" />
+        <Setter Property="Foreground" Value="{DynamicResource Blue7}" />
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="TextDecorations" Value="Underline" />
+    </Style>
+
+    <Style Selector="TextBox.markdown">
+        <Setter Property="IsReadOnly" Value="True" />
+        <Setter Property="IsEnabled" Value="True" />
+        <Setter Property="AcceptsReturn" Value="True" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderBrush" Value="Transparent" />
+        <Setter Property="TextWrapping" Value="WrapWithOverflow" />
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="Margin" Value="0" />
+    </Style>
+
+    <Style Selector="TextBox.markdown:focus /template/ Border#PART_BorderElement">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderBrush" Value="Transparent" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="Margin" Value="0" />
+    </Style>
+
+    <Style Selector="TextBox.markdown:pointerover /template/ Border#PART_BorderElement">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="BorderBrush" Value="Transparent" />
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="Margin" Value="0" />
+    </Style>
+
+    <Style Selector="Button.Copy">
+        <Setter Property="Content" Value="{i18n:I18n {x:Static language:MarkdownRender.CopyButtonContent}}" />
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="Height" Value="24" />
+        <Setter Property="Padding" Value="3" />
+        <Setter Property="Margin" Value="0" />
+    </Style>
+
+    <Style Selector="Border.MdCodeBorder">
+        <Setter Property="CornerRadius" Value="5" />
+        <Setter Property="Padding" Value="3 " />
+        <Setter Property="Background" Value="{DynamicResource Code}" />
+    </Style>
+
+    <Style Selector="SelectableTextBlock.MdCode">
+        <Setter Property="Foreground" Value="{DynamicResource Grey9}" />
+    </Style>
+
+    <Style Selector="SelectableTextBlock.MdLink">
+        <Setter Property="Foreground" Value="{DynamicResource Blue3}" />
+    </Style>
+
+    <Style Selector="SelectableTextBlock.MdLink:hover">
+        <Setter Property="Foreground" Value="{DynamicResource Blue1}" />
+    </Style>
+
+    <Style Selector="SelectableTextBlock.MdLink:pressed">
+        <Setter Property="Foreground" Value="{DynamicResource Blue0}" />
+    </Style>
+
+    <Style Selector="SelectableTextBlock.MdLink:disabled">
+        <Setter Property="Foreground" Value="{DynamicResource Grey6}" />
+    </Style>
+
+    <Style Selector="SelectableTextBlock.MdLink:disabled:hover">
+        <Setter Property="Foreground" Value="{DynamicResource Grey5}" />
+    </Style>
+
+    <Style Selector="Button.MdCopyButton">
+        <Setter Property="Background" Value="{DynamicResource Grey8}" />
+        <Setter Property="Foreground" Value="{DynamicResource Grey0}" />
+    </Style>
+</Styles>

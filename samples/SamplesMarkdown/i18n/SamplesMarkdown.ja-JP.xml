@@ -8,5 +8,6 @@
     <MarkdownThemeSelectPlaceholder>テーマ色を選択してください。</MarkdownThemeSelectPlaceholder>
     <ApplicationLanguageLabel>システム言語：</ApplicationLanguageLabel>
     <ApplicationLanguageSelectPlaceholder>言語を選択してください。</ApplicationLanguageSelectPlaceholder>
+    <SampleMarkdownFileLabel>サンプルマークダウン:</SampleMarkdownFileLabel>
   </MainWindow>
 </Localization>

@@ -19,9 +19,9 @@
         <vm:MainWindowViewModel />
     </Design.DataContext>
 
-    <Grid RowDefinitions="Auto *">
-        <StackPanel Orientation="Horizontal" Margin="0 10" VerticalAlignment="Center">
-            <SelectableTextBlock Text="{i18n:I18n {x:Static language:MainWindow.ApplicationThemeLabel}}" VerticalAlignment="Center" Classes="MdH2" />
+    <Grid RowDefinitions="Auto Auto *">
+        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+            <TextBlock Text="{i18n:I18n {x:Static language:MainWindow.ApplicationThemeLabel}}" VerticalAlignment="Center" />
             <ToggleSwitch OnContent="{i18n:I18n {x:Static language:MainWindow.ThemeDark}}" OffContent="{i18n:I18n {x:Static language:MainWindow.ThemeLight}}" VerticalAlignment="Center"
                           Command="{Binding RaiseChangeThemeHandler}" Margin="5 0 10 0" />
 
@@ -40,7 +40,11 @@
                       SelectedItem="{Binding SelectedLanguage}" />
 
         </StackPanel>
-        <ScrollViewer Grid.Row="1">
+        <StackPanel Orientation="Horizontal" Grid.Row="1"  Margin="0 10" VerticalAlignment="Center">
+            <TextBlock Text="{i18n:I18n {x:Static language:MainWindow.SampleMarkdownFileLabel}}" VerticalAlignment="Center" />
+            <ComboBox Margin="5 0" ItemsSource="{Binding MarkdownFiles}" SelectedItem="{Binding SelectedFile}"/>
+        </StackPanel>
+        <ScrollViewer Grid.Row="2" Padding="10">
             <md:MarkdownRender Value="{Binding Markdown}" />
         </ScrollViewer>
     </Grid>
