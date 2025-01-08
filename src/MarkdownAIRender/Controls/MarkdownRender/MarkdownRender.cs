@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Text;
 
 using Avalonia;
 using Avalonia.Controls;
@@ -631,6 +632,9 @@ namespace MarkdownAIRender.Controls.MarkdownRender
                 case EmphasisInline emphasisInline:
                     return CreateEmphasisInline(emphasisInline);
 
+                case LinkDelimiterInline linkDelimiterInline:
+                    return CreateLinkDelimiterInline(linkDelimiterInline);
+
                 case CodeInline codeInline:
                     return [CreateCodeInline(codeInline)];
 
@@ -656,6 +660,18 @@ namespace MarkdownAIRender.Controls.MarkdownRender
                     return [new Run(mdInline.ToString())];
             }
         }
+
+        private List<object> CreateLinkDelimiterInline(LinkDelimiterInline linkDelimiterInline)
+        {
+            // 用一个 Avalonia 的 Run 显示文本
+            if (linkDelimiterInline.FirstChild is LiteralInline literalInline)
+            {
+                return [new Run(literalInline.Content.Text)];
+            }
+
+            return [new Run(linkDelimiterInline.FirstChild?.ToPositionText())];
+        }
+
 
         private List<object> CreateEmphasisInline(EmphasisInline emphasis)
         {

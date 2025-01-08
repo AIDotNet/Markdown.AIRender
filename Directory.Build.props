@@ -5,7 +5,7 @@
         <Nullable>enable</Nullable>
         <PackageIcon>logo.png</PackageIcon>
         <AvaloniaVersion>11.2.3</AvaloniaVersion>
-        <Version>0.1.15</Version>
+        <Version>0.1.16</Version>
     </PropertyGroup>
 
     <ItemGroup>
