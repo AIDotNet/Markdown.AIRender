@@ -106,7 +106,7 @@ namespace MarkdownAIRender.Controls.MarkdownRender
             // 监测 ValueProperty 的变化
             ValueProperty.Changed.AddClassHandler<MarkdownRender>((sender, e) =>
             {
-                if (e.NewValue is string newValue && e.NewValue != Value)
+                if (e.NewValue is string newValue)
                 {
                     sender.Value = newValue;
                 }

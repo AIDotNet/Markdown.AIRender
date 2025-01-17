@@ -66,6 +66,9 @@
         <PackagePath></PackagePath>
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </None>
+      <None Update="markdowns\MDSample.md">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
       <None Update="markdowns\OnlyTitles.md">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </None>
